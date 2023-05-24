@@ -24,9 +24,10 @@ const props = {
 };
 function Nav() {
 	return (
-		<nav>
-			<NavLink to="/" className={({ isActive }) => (isActive ? "active" : "inactive")} > Home </NavLink>
-			<NavLink to="/vite" className={({ isActive }) => (isActive ? "active" : "inactive")} > Vite </NavLink>
+		<nav className="mynav">
+			<NavLink to="/" className={({ isActive }) => (isActive ? "active" : "inactive")} > Vue </NavLink>
+			<NavLink to="/vite" className={({ isActive }) => (isActive ? "active" : "inactive")} > Vue+vite </NavLink>
+			<NavLink to="/react17" className={({ isActive }) => (isActive ? "active" : "inactive")} > React17 </NavLink>
 		</nav>
 	);
 }
@@ -54,6 +55,15 @@ function App() {
 									height="100%"
 									name="vite"
 									url={"http://localhost:7500"}
+								/>
+							}
+						/>
+						<Route path="/react17" element={ <WujieReact
+									width="100%"
+									props={props}
+									height="100%"
+									name="react17"
+									url={"http://localhost:7100"}
 								/>
 							}
 						/>

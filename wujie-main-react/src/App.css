@@ -42,3 +42,6 @@
 .inactive {
 	color: black;
 }
+.mynav a {
+	padding: 10px;
+}
