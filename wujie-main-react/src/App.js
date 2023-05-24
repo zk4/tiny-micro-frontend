@@ -23,19 +23,6 @@ const props = {
 	},
 };
 function Nav() {
-	const navigation = useNavigate();
-
-	// 在 xxx-sub 路由下子应用将激活路由同步给主应用，主应用跳转对应路由高亮菜单栏
-	// bus.$on("sub-route-change", (name, path) => {
-	//   const mainName = `${name}-sub`;
-	//   const mainPath = `/${name}-sub${path}`;
-	//   const currentPath = window.location.hash.replace("#", "");
-	//   if (currentPath.includes(mainName) && currentPath !== mainPath) {
-	//     console.log("mainPath",mainPath)
-	//     navigation(mainPath);
-	//   }
-	// });
-
 	return (
 		<nav>
 			<NavLink to="/" className={({ isActive }) => (isActive ? "active" : "inactive")} > Home </NavLink>
@@ -47,7 +34,7 @@ function Nav() {
 function App() {
 	return (
 		<div className="App">
-			<h1>this is good sign</h1>
+			<h1>Wujie Expermient</h1>
 			<Router>
 				<Nav/>
 				<Routes>
