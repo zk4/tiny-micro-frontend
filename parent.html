@@ -33,49 +33,46 @@
 									 oldiframeAppendChild.call(oldDocument.body,script);
 								 }
 
-                 const injectedCode = `
-								  // proxy createElement to parent window
-									Object.defineProperty(document, "createElement", {
+
+								 // proxy iframe createElement to parent createElement
+									Object.defineProperty(iframe.contentWindow.document, "createElement", {
 										get() {
 											return function (...args) {
 												return window.parent.document.createElement(...args);
 											};
 										},
 									});
-
-								  // proxy appendChild to parent window
-									Object.defineProperty(document.body, "appendChild", {
+								 // proxy iframe appendChild to parent appendChild
+									Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
 										get() {
 											return function (...args) {
 												return window.parent.document.body.appendChild(...args);
 											};
 										},
 									});
-								`;
 
-                 const createDiv = `
+                 const createShadowDom = `
             		  const shadowContainer = document.createElement("div");
 									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 									const shadowContent = document.createElement("div");
 									shadowRoot.appendChild(shadowContent);
-            	`;
+								`;
 
                  const userJSCode = `
-            		import Vue from "./vue.esm.browser.js";
-            		new Vue({
-            			data: {
-            				message: "Hello Jail!",
-            			},
-            			render: function (createElement) {
-            				return createElement("p", this.message);
-            			},
-            		}).$mount(shadowContent);
+									import Vue from "./vue.esm.browser.js";
+									new Vue({
+										data: {
+											message: "Hello Jail!",
+										},
+										render: function (createElement) {
+											return createElement("p", this.message);
+										},
+									}).$mount(shadowContent);
 
-            	`;
+								`;
 
-                 inject(injectedCode, iframe);
-                 inject(createDiv, iframe);
+                 inject(createShadowDom, iframe);
                  inject(userJSCode, iframe, true);
 
                };
