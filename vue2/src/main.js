@@ -43,7 +43,6 @@ if (window.__POWERED_BY_WUJIE__) {
   window.__WUJIE_MOUNT = () => {
     const router = new VueRouter({ base, routes });
     instance = new Vue({ router, render: (h) => h(App) }).$mount("#app");
-		console.log("wujie is",window.$wujie)
   };
   window.__WUJIE_UNMOUNT = () => {
     instance.$destroy();

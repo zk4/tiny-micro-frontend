@@ -5,16 +5,31 @@
 </head>
 <body>
 	<script>
-		// 创建 iframe 元素
-		window.callme =function(value){
-			console.log(value)
-		}
 		var iframe = document.createElement('iframe');
-		iframe.src = 'iframe.html';
+		iframe.src = 'about:blank';
 		document.body.appendChild(iframe);
 
 		iframe.onload = function() {
-			console.log(window.__ZK_PARENT);
+			const injectedCode = `Object.defineProperty(window, '__ZK_PARENT', {
+				get: function() {
+					return window.parent["__ZK_PARENT"];
+				},
+				set: function(value){
+					window.parent["__ZK_PARENT"] = value
+				}
+			});`
+			const nextScriptElement = iframe.contentWindow.document.createElement("script");
+			nextScriptElement.textContent= injectedCode
+			iframe.contentWindow.document.body.appendChild(nextScriptElement);
+
+
+			const oldIframeCode = `window.__ZK_PARENT ="I am from iframe text"`
+			const nextScriptElement2 = iframe.contentWindow.document.createElement("script");
+			nextScriptElement2.textContent= oldIframeCode
+			iframe.contentWindow.document.body.appendChild(nextScriptElement2);
+
+
+			console.log(window.__ZK_PARENT)
 		}
 	</script>
 </body>
