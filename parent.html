@@ -10,49 +10,52 @@
   </style>
 
   <body>
-		<p>outer </p>
+    <p>outer</p>
     <script>
-               const iframe = document.createElement("iframe");
-               iframe.hidden = true;
-               iframe.src = "about:blank";
-               document.body.appendChild(iframe);
+      const iframe = document.createElement("iframe");
+      iframe.hidden = true;
+      iframe.src = "about:blank";
+      document.body.appendChild(iframe);
 
+      iframe.onload = function () {
+        let oldDocument = iframe.contentWindow.document;
+        let oldIframeCreateElement = oldDocument.createElement;
+        let oldiframeAppendChild = oldDocument.body.appendChild;
 
-               iframe.onload = function () {
-								 let oldDocument = iframe.contentWindow.document
-								 let oldIframeCreateElement = oldDocument.createElement
-								 let oldiframeAppendChild = oldDocument.body.appendChild
+        function inject(code, frame, ismodule) {
+          // when call function like this, you must use call to restore the contenxt
+          const script = oldIframeCreateElement.call(oldDocument, "script");
+          if (ismodule) {
+            script.type = "module";
+          }
+          script.textContent = code;
+          oldiframeAppendChild.call(oldDocument.body, script);
+        }
 
-								 function inject(code, frame, ismodule) {
-									 // when call function like this, you must use call to restore the contenxt
-									 const script = oldIframeCreateElement.call(oldDocument,"script");
-									 if (ismodule) {
-										 script.type = "module";
-									 }
-									 script.textContent = code;
-									 oldiframeAppendChild.call(oldDocument.body,script);
-								 }
+        // proxy iframe createElement to parent createElement
+        Object.defineProperty(iframe.contentWindow.document, "createElement", {
+          get() {
+            return function (...args) {
+              return window.parent.document.createElement(...args);
+            };
+          },
+        });
 
+        // proxy iframe appendChild to parent appendChild
+        Object.defineProperty(
+          iframe.contentWindow.document.body,
+          "appendChild",
+          {
+            get() {
+              return function (...args) {
+                return window.parent.document.body.appendChild(...args);
+              };
+            },
+          }
+        );
 
-								 // proxy iframe createElement to parent createElement
-									Object.defineProperty(iframe.contentWindow.document, "createElement", {
-										get() {
-											return function (...args) {
-												return window.parent.document.createElement(...args);
-											};
-										},
-									});
-								 // proxy iframe appendChild to parent appendChild
-									Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
-										get() {
-											return function (...args) {
-												return window.parent.document.body.appendChild(...args);
-											};
-										},
-									});
-
-								 // TODO: no need to execute in iframe context
-                 const createShadowDom = `
+        // TODO: no need to execute in iframe context
+        const createShadowDom = `
             		  const shadowContainer = document.createElement("div");
 									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
@@ -60,7 +63,7 @@
 									shadowRoot.appendChild(shadowContent);
 								`;
 
-                 const userJSCode = `
+        const userJSCode = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
 										data: {
@@ -73,10 +76,9 @@
 
 								`;
 
-                 inject(createShadowDom, iframe);
-                 inject(userJSCode, iframe, true);
-
-               };
+        inject(createShadowDom, iframe);
+        inject(userJSCode, iframe, true);
+      };
     </script>
   </body>
 </html>
