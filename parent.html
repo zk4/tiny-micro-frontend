@@ -1,36 +1,61 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Parent</title>
-</head>
-<body>
-	<script>
-		var iframe = document.createElement('iframe');
-		iframe.src = 'about:blank';
-		document.body.appendChild(iframe);
+  <head>
+    <title>Parent</title>
+  </head>
+  <style>
+    div {
+      background-color: red;
+    }
+  </style>
 
-		iframe.onload = function() {
-			const injectedCode = `Object.defineProperty(window, '__ZK_PARENT', {
-				get: function() {
-					return window.parent["__ZK_PARENT"];
-				},
-				set: function(value){
-					window.parent["__ZK_PARENT"] = value
+  <body>
+    <script>
+      var iframe = document.createElement("iframe");
+      // iframe.hidden = true;
+      iframe.src = "about:blank";
+      document.body.appendChild(iframe);
+
+      function inject(code, frame, ismodule) {
+        const script = frame.contentWindow.document.createElement("script");
+        if (ismodule) {
+          script.type = "module";
+        }
+        script.textContent = code;
+        frame.contentWindow.document.body.appendChild(script);
+      }
+
+      iframe.onload = function () {
+        const injectedCode = `Object.defineProperty(window.document, 'getElementById', {
+				set: function(args) {
+					return window.parent.document.getElementById(args);
 				}
-			});`
-			const nextScriptElement = iframe.contentWindow.document.createElement("script");
-			nextScriptElement.textContent= injectedCode
-			iframe.contentWindow.document.body.appendChild(nextScriptElement);
+			});`;
 
+        const createDiv = `
+					const appDiv = window.parent.document.createElement('div');
+					window.parent.document.body.appendChild(appDiv);
+				`;
 
-			const oldIframeCode = `window.__ZK_PARENT ="I am from iframe text"`
-			const nextScriptElement2 = iframe.contentWindow.document.createElement("script");
-			nextScriptElement2.textContent= oldIframeCode
-			iframe.contentWindow.document.body.appendChild(nextScriptElement2);
+        const userCode = `
+					import Vue from "./vue.esm.browser.js";
+					new Vue({
+						data: {
+							message: "Hello Vue!",
+						},
+						render: function (createElement) {
+							return createElement("div", this.message);
+						},
+					}).$mount(appDiv);
 
+				`;
 
-			console.log(window.__ZK_PARENT)
-		}
-	</script>
-</body>
+        inject(injectedCode, iframe);
+        inject(createDiv, iframe);
+        inject(userCode, iframe, true);
+
+        console.log(window.__ZK_PARENT);
+      };
+    </script>
+  </body>
 </html>
