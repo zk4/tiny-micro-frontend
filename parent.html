@@ -13,31 +13,51 @@
 		<p>outer </p>
     <script>
                const iframe = document.createElement("iframe");
-               iframe.hidden = true;
+//               iframe.hidden = true;
                iframe.src = "about:blank";
                document.body.appendChild(iframe);
 
-               function inject(code, frame, ismodule) {
-                 const script = frame.contentWindow.document.createElement("script");
-                 if (ismodule) {
-                   script.type = "module";
-                 }
-                 script.textContent = code;
-                 frame.contentWindow.document.body.appendChild(script);
-               }
 
                iframe.onload = function () {
-                 const injectedCode = `Object.defineProperty(window.document, 'getElementById', {
-            	set: function(args) {
-            		return window.parent.document.getElementById(args);
-            	}
-            });`;
+								 let oldDocument = iframe.contentWindow.document
+								 let oldIframeCreateElement = oldDocument.createElement
+								 let oldiframeAppendChild = oldDocument.body.appendChild
+
+								 function inject(code, frame, ismodule) {
+									 // when call function like this, you must use call to restore the contenxt
+									 const script = oldIframeCreateElement.call(oldDocument,"script");
+									 if (ismodule) {
+										 script.type = "module";
+									 }
+									 script.textContent = code;
+									 oldiframeAppendChild.call(oldDocument.body,script);
+								 }
+
+                 const injectedCode = `
+								  // proxy createElement to parent window
+									Object.defineProperty(document, "createElement", {
+										get() {
+											return function (...args) {
+												return window.parent.document.createElement(...args);
+											};
+										},
+									});
+
+								  // proxy appendChild to parent window
+									Object.defineProperty(document.body, "appendChild", {
+										get() {
+											return function (...args) {
+												return window.parent.document.body.appendChild(...args);
+											};
+										},
+									});
+								`;
 
                  const createDiv = `
-            		  const shadowContainer = window.parent.document.createElement("div");
-									window.parent.document.body.appendChild(shadowContainer)
+            		  const shadowContainer = document.createElement("div");
+									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
-									const shadowContent = window.parent.document.createElement("div");
+									const shadowContent = document.createElement("div");
 									shadowRoot.appendChild(shadowContent);
             	`;
 
