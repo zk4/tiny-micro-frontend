@@ -4,58 +4,63 @@
     <title>Parent</title>
   </head>
   <style>
-    div {
-      background-color: red;
+    p {
+      background-color: green;
     }
   </style>
 
   <body>
+		<p>outer </p>
     <script>
-      var iframe = document.createElement("iframe");
-      // iframe.hidden = true;
-      iframe.src = "about:blank";
-      document.body.appendChild(iframe);
+               var iframe = document.createElement("iframe");
+               // iframe.hidden = true;
+               iframe.src = "about:blank";
+               document.body.appendChild(iframe);
 
-      function inject(code, frame, ismodule) {
-        const script = frame.contentWindow.document.createElement("script");
-        if (ismodule) {
-          script.type = "module";
-        }
-        script.textContent = code;
-        frame.contentWindow.document.body.appendChild(script);
-      }
+               function inject(code, frame, ismodule) {
+                 const script = frame.contentWindow.document.createElement("script");
+                 if (ismodule) {
+                   script.type = "module";
+                 }
+                 script.textContent = code;
+                 frame.contentWindow.document.body.appendChild(script);
+               }
 
-      iframe.onload = function () {
-        const injectedCode = `Object.defineProperty(window.document, 'getElementById', {
-				set: function(args) {
-					return window.parent.document.getElementById(args);
-				}
-			});`;
+               iframe.onload = function () {
+                 const injectedCode = `Object.defineProperty(window.document, 'getElementById', {
+            	set: function(args) {
+            		return window.parent.document.getElementById(args);
+            	}
+            });`;
 
-        const createDiv = `
-					const appDiv = window.parent.document.createElement('div');
-					window.parent.document.body.appendChild(appDiv);
-				`;
+                 const createDiv = `
+            		  const shadowContainer = window.parent.document.createElement("div");
+									window.parent.document.body.appendChild(shadowContainer)
+									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+									const shadowContent = window.parent.document.createElement("div");
+									shadowRoot.appendChild(shadowContent);
 
-        const userCode = `
-					import Vue from "./vue.esm.browser.js";
-					new Vue({
-						data: {
-							message: "Hello Vue!",
-						},
-						render: function (createElement) {
-							return createElement("div", this.message);
-						},
-					}).$mount(appDiv);
+            	`;
 
-				`;
+                 const userCode = `
+            		import Vue from "./vue.esm.browser.js";
+            		new Vue({
+            			data: {
+            				message: "Hello Jail!",
+            			},
+            			render: function (createElement) {
+            				return createElement("p", this.message);
+            			},
+            		}).$mount(shadowContent);
 
-        inject(injectedCode, iframe);
-        inject(createDiv, iframe);
-        inject(userCode, iframe, true);
+            	`;
 
-        console.log(window.__ZK_PARENT);
-      };
+                 inject(injectedCode, iframe);
+                 inject(createDiv, iframe);
+                 inject(userCode, iframe, true);
+
+
+               };
     </script>
   </body>
 </html>
