@@ -13,7 +13,7 @@
 		<p>outer </p>
     <script>
                const iframe = document.createElement("iframe");
-//               iframe.hidden = true;
+               iframe.hidden = true;
                iframe.src = "about:blank";
                document.body.appendChild(iframe);
 
@@ -61,7 +61,7 @@
 									shadowRoot.appendChild(shadowContent);
             	`;
 
-                 const userCode = `
+                 const userJSCode = `
             		import Vue from "./vue.esm.browser.js";
             		new Vue({
             			data: {
@@ -76,7 +76,7 @@
 
                  inject(injectedCode, iframe);
                  inject(createDiv, iframe);
-                 inject(userCode, iframe, true);
+                 inject(userJSCode, iframe, true);
 
                };
     </script>
