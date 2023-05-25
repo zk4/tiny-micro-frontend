@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>IFrame</title>
+</head>
+<body>
+	<script>
+			Object.defineProperty(window, '__ZK_PARENT', {
+				get: function() {
+					console.log("get")
+					return window.parent["__ZK_PARENT"];
+				},
+				set: function(value){
+					console.log("set")
+					window.parent["__ZK_PARENT"] = value
+				}
+			});
+			Object.defineProperty(window, 'callme', {
+				get: function() {
+					return window.parent["callme"];
+				},
+				set: function(value){
+					window.parent["callme"](value)
+				}
+			});
+		window.__ZK_PARENT = 'from iframe text';
+		window.callme('hello')
+	</script>
+</body>
+</html>
