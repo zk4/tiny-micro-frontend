@@ -12,8 +12,8 @@
   <body>
 		<p>outer </p>
     <script>
-               var iframe = document.createElement("iframe");
-               // iframe.hidden = true;
+               const iframe = document.createElement("iframe");
+               iframe.hidden = true;
                iframe.src = "about:blank";
                document.body.appendChild(iframe);
 
@@ -39,7 +39,6 @@
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 									const shadowContent = window.parent.document.createElement("div");
 									shadowRoot.appendChild(shadowContent);
-
             	`;
 
                  const userCode = `
@@ -58,7 +57,6 @@
                  inject(injectedCode, iframe);
                  inject(createDiv, iframe);
                  inject(userCode, iframe, true);
-
 
                };
     </script>
