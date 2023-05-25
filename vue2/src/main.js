@@ -49,5 +49,5 @@ if (window.__POWERED_BY_WUJIE__) {
     instance.$destroy();
   };
 } else {
-  new Vue({ router: new VueRouter({ base, routes }), render: (h) => h(App) }).$mount("#app");
+  new Vue({ router: new VueRouter({mode:'hash', base, routes }), render: (h) => h(App) }).$mount("#app");
 }

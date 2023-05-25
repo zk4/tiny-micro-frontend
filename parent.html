@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<body>
+	<iframe id="f1" src="./inner.html" width="100%" height="50%"></iframe>
+</body>
+<script>
+	let f = window.document.getElementById("f1");
+	f.onload=function(){
+		console.log(f.contentWindow.__ZK_PARENT)
+	}
+</script>
+</html>
