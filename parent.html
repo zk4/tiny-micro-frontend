@@ -19,17 +19,18 @@
 
       iframe.onload = function () {
         let oldDocument = iframe.contentWindow.document;
-        let oldIframeCreateElement = oldDocument.createElement;
-        let oldiframeAppendChild = oldDocument.body.appendChild;
+
+        // when assign function like this, you must use call/bind to restore the contenxt
+        let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
+        let oldiframeAppendChild = oldDocument.body.appendChild.bind(oldDocument.body);
 
         function inject(code, frame, ismodule) {
-          // when call function like this, you must use call to restore the contenxt
-          const script = oldIframeCreateElement.call(oldDocument, "script");
+          const script = oldIframeCreateElement("script");
           if (ismodule) {
             script.type = "module";
           }
           script.textContent = code;
-          oldiframeAppendChild.call(oldDocument.body, script);
+          oldiframeAppendChild(script);
         }
 
         // proxy iframe createElement to parent createElement
@@ -60,6 +61,7 @@
 									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 									const shadowContent = document.createElement("div");
+									shadowContent.id ="app"
 									shadowRoot.appendChild(shadowContent);
 								`;
 

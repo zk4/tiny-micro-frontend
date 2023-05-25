@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Web Components</title>
+  <style>
+    .btn {
+      color: #000;
+      font-size: 30px;
+    }
+  </style>
+</head>
+<body>
+<button class="btn">获取shadowRoot</button>
+<my-component></my-component>
+</body>
+<script>
+ class MyComponent extends HTMLElement {
+  constructor() {
+ super();
+		let parent  = this;
+		//  是否使用 shadowndom
+		let useShadow = true;
+
+		if(useShadow)
+		{
+			// 使用 shadow dom
+			var shadow = this.attachShadow( { mode: 'open' } );
+			parent = shadow
+		}
+
+
+    var con = document.createElement('div');
+    con.classList.add('btn');
+    con.innerHTML = "自定义元素";
+
+    let style = document.createElement('style');
+    style.innerText = '.btn { font-weight: 600; color: red;}';
+
+    parent.appendChild(style);
+    parent.appendChild(con);
+  }
+}
+window.customElements.define('my-component', MyComponent);
+</script>
+</html>
