@@ -5,13 +5,11 @@ function createIframe(id, onloaded) {
   document.body.appendChild(iframe);
 
   iframe.onload = function () {
-    let oldDocument = iframe.contentWindow.document;
 
+    let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind to restore the contenxt
     let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
-    let oldiframeAppendChild = oldDocument.body.appendChild.bind(
-      oldDocument.body
-    );
+    let oldiframeAppendChild = oldDocument.body.appendChild.bind(oldDocument.body);
 
     function inject0(kvs) {
       const script = oldIframeCreateElement("script");
@@ -70,6 +68,8 @@ function createIframe(id, onloaded) {
     document.body.appendChild(shadowContainer);
     const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
     const shadowStyle = document.createElement("style");
+
+		//TODO: inject isolate css here
     shadowStyle.textContent = "label { color: red}";
     shadowRoot.appendChild(shadowStyle);
 
