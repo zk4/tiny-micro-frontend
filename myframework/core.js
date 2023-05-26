@@ -31,17 +31,19 @@ function createIframe(id,onloaded) {
     }
 
     // proxy iframe createElement to parent createElement
-    Object.defineProperty(iframe.contentWindow.document, "createElement", {
-      get() {
-        return function (...args) {
-          return window.parent.document.createElement(...args);
-        };
-      },
-    });
+    // Object.defineProperty(iframe.contentWindow.document, "createElement", {
+    //   get() {
+    //     return function (...args) {
+    //       return window.parent.document.createElement(...args);
+    //     };
+    //   },
+    // });
 
 		Object.defineProperty(iframe.contentWindow.document, "getElementById", {
 			get() {
 				return function (selector) {
+				// TODO:
+				// normal getElementById does not work
 					return window.parent.document.getElementById(selector).shadowRoot.getElementById(selector);
 				};
 			},
@@ -49,19 +51,21 @@ function createIframe(id,onloaded) {
 		Object.defineProperty(iframe.contentWindow.document, "querySelector", {
 			get() {
 				return function (selector) {
+				// TODO:
+				// normal querySelector does not work
 					return window.parent.document.querySelector(selector).shadowRoot.querySelector(selector)
 				};
 			},
 		});
 
     // proxy iframe appendChild to parent appendChild
-    Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
-      get() {
-        return function (...args) {
-          return window.parent.document.body.appendChild(...args);
-        };
-      },
-    });
+    // Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
+    //   get() {
+    //     return function (...args) {
+    //       return window.parent.document.body.appendChild(...args);
+    //     };
+    //   },
+    // });
 
     //  no need to execute in iframe context
 		const shadowContainer = document.createElement("div");
