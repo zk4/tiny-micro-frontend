@@ -16,62 +16,67 @@
     <hr />
 
     <script>
-      const iframe = document.createElement("iframe");
-      iframe.hidden = true;
-      iframe.src = "about:blank";
-      document.body.appendChild(iframe);
+      function createIframe(onloaded) {
+        const iframe = document.createElement("iframe");
+        iframe.hidden = true;
+        iframe.src = "about:blank";
+        document.body.appendChild(iframe);
 
-      iframe.onload = function () {
-        let oldDocument = iframe.contentWindow.document;
+        iframe.onload = function () {
+          let oldDocument = iframe.contentWindow.document;
 
-        // when assign function like this, you must use call/bind to restore the contenxt
-        let oldIframeCreateElement =
-          oldDocument.createElement.bind(oldDocument);
-        let oldiframeAppendChild = oldDocument.body.appendChild.bind(
-          oldDocument.body
-        );
+          // when assign function like this, you must use call/bind to restore the contenxt
+          let oldIframeCreateElement =
+            oldDocument.createElement.bind(oldDocument);
+          let oldiframeAppendChild = oldDocument.body.appendChild.bind(
+            oldDocument.body
+          );
 
-        function inject(code, frame, type) {
-          const script = oldIframeCreateElement("script");
-          if (type) {
-            script.type = type;
+          function inject(code, frame, type) {
+            const script = oldIframeCreateElement("script");
+            if (type) {
+              script.type = type;
+            }
+            script.textContent = code;
+            oldiframeAppendChild(script);
           }
-          script.textContent = code;
-          oldiframeAppendChild(script);
-        }
-        function injectJsTag(src, frame, type) {
-          const script = oldIframeCreateElement("script");
-          if (type) {
-            script.type = type;
+          function injectJsTag(src, frame, type) {
+            const script = oldIframeCreateElement("script");
+            if (type) {
+              script.type = type;
+            }
+            script.src = src;
+            oldiframeAppendChild(script);
           }
-          script.src = src;
-          oldiframeAppendChild(script);
-        }
 
-        // proxy iframe createElement to parent createElement
-        Object.defineProperty(iframe.contentWindow.document, "createElement", {
-          get() {
-            return function (...args) {
-              return window.parent.document.createElement(...args);
-            };
-          },
-        });
+          // proxy iframe createElement to parent createElement
+          Object.defineProperty(
+            iframe.contentWindow.document,
+            "createElement",
+            {
+              get() {
+                return function (...args) {
+                  return window.parent.document.createElement(...args);
+                };
+              },
+            }
+          );
 
-        // proxy iframe appendChild to parent appendChild
-        Object.defineProperty(
-          iframe.contentWindow.document.body,
-          "appendChild",
-          {
-            get() {
-              return function (...args) {
-                return window.parent.document.body.appendChild(...args);
-              };
-            },
-          }
-        );
+          // proxy iframe appendChild to parent appendChild
+          Object.defineProperty(
+            iframe.contentWindow.document.body,
+            "appendChild",
+            {
+              get() {
+                return function (...args) {
+                  return window.parent.document.body.appendChild(...args);
+                };
+              },
+            }
+          );
 
-        // TODO: no need to execute in iframe context
-        const createShadowDom = `
+          // TODO: no need to execute in iframe context
+          const createShadowDom = `
             		  const shadowContainer = document.createElement("div");
 									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
@@ -84,7 +89,14 @@
 									shadowRoot.appendChild(shadowContent);
 								`;
 
-        const vue2Code = `
+          inject(createShadowDom, iframe);
+					onloaded(this,iframe,inject,injectJsTag)
+        };
+				return iframe;
+      }
+
+			createIframe((sandbox,iframe,inject,injectJsTag)=>{
+          const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
 										data: {
@@ -108,7 +120,14 @@
 								  }).$mount(shadowContent);
 
 								`;
-        const vue3 = `
+          // js 是异步的, 要等待返回
+          setTimeout(() => {
+            inject(vue2Code, iframe, "module");
+            console.log("injected vue2");
+          }, 1000);
+			});
+			createIframe((sandbox,iframe,inject,injectJsTag)=>{
+          const vue3 = `
 						const { createApp, ref, h } = Vue;
 
 						const app = createApp({
@@ -135,14 +154,13 @@
 
 						app.mount(shadowContent);
 				`;
-        inject(createShadowDom, iframe);
-				injectJsTag("https://unpkg.com/vue@next",iframe);
-				// js 是异步的, 要等待返回
-				setTimeout(()=>{
-        		inject(vue3, iframe, "module");
-						console.log("injected vue3")
-				},3000)
-      };
+          injectJsTag("https://unpkg.com/vue@next", iframe);
+          // js 是异步的, 要等待返回
+          setTimeout(() => {
+            inject(vue3, iframe, "module");
+            console.log("injected vue3");
+          }, 3000);
+			});
     </script>
   </body>
 </html>
