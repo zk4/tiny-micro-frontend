@@ -8,9 +8,7 @@
 # todo
 
 0. [x] true isloation between different apps
-
 1. [ ] dynamic laod js and css
-
 2. [ ] routing pattern design
 
 
