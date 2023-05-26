@@ -21,8 +21,11 @@
         let oldDocument = iframe.contentWindow.document;
 
         // when assign function like this, you must use call/bind to restore the contenxt
-        let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
-        let oldiframeAppendChild = oldDocument.body.appendChild.bind(oldDocument.body);
+        let oldIframeCreateElement =
+          oldDocument.createElement.bind(oldDocument);
+        let oldiframeAppendChild = oldDocument.body.appendChild.bind(
+          oldDocument.body
+        );
 
         function inject(code, frame, ismodule) {
           const script = oldIframeCreateElement("script");
@@ -67,26 +70,26 @@
 
         const userJSCode = `
 									import Vue from "./vue.esm.browser.js";
- new Vue({
-      data: {
-        counter: 0
-      },
-      methods: {
-        incrementCounter() {
-          this.counter++;
-        }
-      },
-      render: function (createElement) {
-        return createElement('div', [
-          createElement('button', {
-            on: {
-              click: this.incrementCounter
-            }
-          }, 'Click Me'),
-          createElement('label', this.counter)
-        ]);
-      }
-    }).$mount(shadowContent);
+									new Vue({
+										data: {
+											counter: 0
+										},
+										methods: {
+											incrementCounter() {
+												this.counter++;
+											}
+										},
+										render: function (createElement) {
+											return createElement('div', [
+												createElement('button', {
+													on: {
+														click: this.incrementCounter
+													}
+												}, 'Click Me'),
+												createElement('label', this.counter)
+											]);
+										}
+								  }).$mount(shadowContent);
 
 								`;
 
