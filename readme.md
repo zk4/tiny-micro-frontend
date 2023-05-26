@@ -1,10 +1,9 @@
 # tiny micro-frontend framework idea validation
 
 1. using shadow dom to isolate css
-
 2. using iframe to isolate js
 
-
+![image-20230526185712808](assets/image-20230526185712808.png)
 
 # todo
 
