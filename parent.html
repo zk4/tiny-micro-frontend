@@ -67,14 +67,26 @@
 
         const userJSCode = `
 									import Vue from "./vue.esm.browser.js";
-									new Vue({
-										data: {
-											message: "Hello Jail!",
-										},
-										render: function (createElement) {
-											return createElement("p", this.message);
-										},
-									}).$mount(shadowContent);
+ new Vue({
+      data: {
+        counter: 0
+      },
+      methods: {
+        incrementCounter() {
+          this.counter++;
+        }
+      },
+      render: function (createElement) {
+        return createElement('div', [
+          createElement('button', {
+            on: {
+              click: this.incrementCounter
+            }
+          }, 'Click Me'),
+          createElement('label', this.counter)
+        ]);
+      }
+    }).$mount(shadowContent);
 
 								`;
 
