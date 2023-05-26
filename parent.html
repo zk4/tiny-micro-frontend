@@ -11,6 +11,10 @@
 
   <body>
     <p>outer</p>
+		<button>outer button</button>
+		<label>1111</label>
+		<hr/>
+
     <script>
       const iframe = document.createElement("iframe");
       iframe.hidden = true;
@@ -63,6 +67,10 @@
             		  const shadowContainer = document.createElement("div");
 									document.body.appendChild(shadowContainer)
 									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+									const shadowStyle = document.createElement("style");
+									shadowStyle.textContent = "label { color: red}";
+									shadowRoot.appendChild(shadowStyle);
+
 									const shadowContent = document.createElement("div");
 									shadowContent.id ="app"
 									shadowRoot.appendChild(shadowContent);
@@ -85,7 +93,7 @@
 													on: {
 														click: this.incrementCounter
 													}
-												}, 'Click Me'),
+												}, 'Vue btn (click me)'),
 												createElement('label', this.counter)
 											]);
 										}
