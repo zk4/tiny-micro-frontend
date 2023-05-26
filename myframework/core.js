@@ -30,15 +30,6 @@ function createIframe(id,onloaded) {
       oldiframeAppendChild(script);
     }
 
-    // proxy iframe createElement to parent createElement
-    // Object.defineProperty(iframe.contentWindow.document, "createElement", {
-    //   get() {
-    //     return function (...args) {
-    //       return window.parent.document.createElement(...args);
-    //     };
-    //   },
-    // });
-
 		Object.defineProperty(iframe.contentWindow.document, "getElementById", {
 			get() {
 				return function (selector) {
@@ -57,15 +48,6 @@ function createIframe(id,onloaded) {
 				};
 			},
 		});
-
-    // proxy iframe appendChild to parent appendChild
-    // Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
-    //   get() {
-    //     return function (...args) {
-    //       return window.parent.document.body.appendChild(...args);
-    //     };
-    //   },
-    // });
 
     //  no need to execute in iframe context
 		const shadowContainer = document.createElement("div");
