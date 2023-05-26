@@ -68,7 +68,7 @@ function createIframe(id,onloaded) {
 		shadowRoot.appendChild(shadowContent);
 
     // inject(createShadowDom, iframe);
-    onloaded(this, iframe, inject, injectJsTag);
+    onloaded(iframe, inject, injectJsTag);
   };
   return iframe;
 }

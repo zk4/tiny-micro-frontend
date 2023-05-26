@@ -1,4 +1,4 @@
-createIframe("app", (sandbox, iframe, inject, injectJsTag) => {
+createIframe("app", (iframe, inject, injectJsTag) => {
   const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
@@ -29,7 +29,7 @@ createIframe("app", (sandbox, iframe, inject, injectJsTag) => {
     console.log("injected vue2");
   }, 1000);
 });
-createIframe("vue3", (sandbox, iframe, inject, injectJsTag) => {
+createIframe("vue3", (iframe, inject, injectJsTag) => {
   const vue3 = `
 						const { createApp, ref, h } = Vue;
 
@@ -61,7 +61,7 @@ createIframe("vue3", (sandbox, iframe, inject, injectJsTag) => {
     inject(vue3, iframe, "module");
   });
 });
-createIframe("react17", (sandbox, iframe, inject, injectJsTag) => {
+createIframe("react17", (iframe, inject, injectJsTag) => {
   const react = `
 							const { useState } = React;
 
