@@ -11,11 +11,9 @@
 
   <body>
     <p>outer</p>
-		<button>outer button</button>
-		<label>1111</label>
-		<hr/>
-
-		<!-- <iframe src="./react2.html" frameborder="0"></iframe> -->
+    <button>outer button</button>
+    <label>1111</label>
+    <hr />
 
     <script>
       const iframe = document.createElement("iframe");
@@ -86,7 +84,7 @@
 									shadowRoot.appendChild(shadowContent);
 								`;
 
-        const userJSCode = `
+        const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
 										data: {
@@ -111,35 +109,40 @@
 
 								`;
 
-					inject(createShadowDom, iframe);
-					inject(userJSCode, iframe, "module");
+        const vue3 = `
+						const { createApp, ref, h } = Vue;
 
+						const app = createApp({
+							setup() {
+								const counter = ref(0);
 
-// react code does not execute...  maybe it's the text/babel type ???
-//					const reactCode =`
-//							const { useState } = React;
-//
-//							function App() {
-//								const [counter, setCounter] = useState(0);
-//
-//								const incrementCounter = () => {
-//									setCounter(counter + 1);
-//								};
-//
-//								return React.createElement(
-//											"div",
-//											null,
-//											React.createElement("button", { onClick: incrementCounter }, "React Click Me"),
-//											React.createElement("label", null, counter)
-//										)
-//
-//							}
-//
-//							ReactDOM.render( React.createElement(App, null) , shadowContent);
-//					`
-//					injectJsTag("./react.development.js",iframe)
-//					injectJsTag("./react-dom.development.js",iframe)
-//					inject(reactCode,iframe,'module')
+								function incrementCounter() {
+									counter.value++;
+								}
+
+								return {
+									counter,
+									incrementCounter
+								};
+							},
+
+							render() {
+								return h('div', [
+									h('button', { onClick: this.incrementCounter }, 'Vue btn (click me)'),
+									h('label', this.counter)
+								]);
+							}
+						});
+
+						app.mount(shadowContent);
+				`;
+        inject(createShadowDom, iframe);
+				injectJsTag("https://unpkg.com/vue@next",iframe);
+				// js 是异步的, 要等待返回
+				setTimeout(()=>{
+        		inject(vue3, iframe, "module");
+						console.log("injected vue3")
+				},3000)
       };
     </script>
   </body>
