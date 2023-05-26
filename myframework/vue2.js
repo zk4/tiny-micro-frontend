@@ -1,5 +1,5 @@
 
-createIframe("app", (iframe, inject, injectJsTag) => {
+createIframe("app", (inject, injectJsTag) => {
   const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
@@ -24,5 +24,5 @@ createIframe("app", (iframe, inject, injectJsTag) => {
 								  }).$mount("#app");
 
 								`;
-  inject(vue2Code, iframe, "module");
+  inject(vue2Code, "module");
 });

@@ -1,5 +1,5 @@
 
-createIframe("vue3", (iframe, inject, injectJsTag) => {
+createIframe("vue3", (inject, injectJsTag) => {
   const vue3 = `
 						const { createApp, ref, h } = Vue;
 
@@ -27,7 +27,7 @@ createIframe("vue3", (iframe, inject, injectJsTag) => {
 
 						app.mount("#vue3");
 				`;
-  injectJsTag("https://unpkg.com/vue@next", iframe, () => {
-    inject(vue3, iframe, "module");
+  injectJsTag("https://unpkg.com/vue@next",  () => {
+    inject(vue3,  "module");
   });
 });

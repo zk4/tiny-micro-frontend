@@ -13,7 +13,7 @@ function createIframe(id,onloaded) {
       oldDocument.body
     );
 
-    function inject(code, frame, type) {
+    function inject(code,  type) {
       const script = oldIframeCreateElement("script");
       if (type) {
         script.type = type;
@@ -21,7 +21,7 @@ function createIframe(id,onloaded) {
       script.textContent = code;
       oldiframeAppendChild(script);
     }
-    function injectJsTag(src, frame, onload) {
+    function injectJsTag(src,  onload) {
       const script = oldIframeCreateElement("script");
       script.src = src;
 			script.type = 'text/javascript';
@@ -67,8 +67,7 @@ function createIframe(id,onloaded) {
 		shadowContent.id = id
 		shadowRoot.appendChild(shadowContent);
 
-    // inject(createShadowDom, iframe);
-    onloaded(iframe, inject, injectJsTag);
+    onloaded(inject, injectJsTag);
   };
   return iframe;
 }

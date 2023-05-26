@@ -1,5 +1,4 @@
-
-createIframe("react17", (iframe, inject, injectJsTag) => {
+createIframe("react17", (inject, injectJsTag) => {
   const react = `
 							const { useState } = React;
 
@@ -20,10 +19,10 @@ createIframe("react17", (iframe, inject, injectJsTag) => {
 
 						ReactDOM.render( React.createElement(App, null),document.querySelector('#react17'));
 				`;
-  injectJsTag("./react.development.js", iframe, () => {
-    injectJsTag("./react-dom.development.js", iframe, () => {
+  injectJsTag("./react.development.js", () => {
+    injectJsTag("./react-dom.development.js", () => {
       // js 是异步的, 要等待返回
-      inject(react, iframe, "module");
+      inject(react, "module");
     });
   });
 });
