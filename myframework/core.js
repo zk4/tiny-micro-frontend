@@ -21,12 +21,13 @@ function createIframe(id,onloaded) {
       script.textContent = code;
       oldiframeAppendChild(script);
     }
-    function injectJsTag(src, frame, type) {
+    function injectJsTag(src, frame, onload) {
       const script = oldIframeCreateElement("script");
-      if (type) {
-        script.type = type;
-      }
       script.src = src;
+			script.type = 'text/javascript';
+ 			script.onload = function() {
+				onload && onload();
+      }
       oldiframeAppendChild(script);
     }
 
@@ -49,7 +50,11 @@ function createIframe(id,onloaded) {
 			},
 		});
 
-    //  no need to execute in iframe context
+		// this is shadow dom wrapper for css isolation
+    // <div id="sandbox_{id}">
+    //      sahdowRoot
+    //           <style>
+    //           <div ...>    <---  this is where app goes
 		const shadowContainer = document.createElement("div");
 		shadowContainer.id =id
 		document.body.appendChild(shadowContainer)

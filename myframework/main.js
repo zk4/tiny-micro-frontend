@@ -1,5 +1,4 @@
-
-createIframe("app",(sandbox, iframe, inject, injectJsTag) => {
+createIframe("app", (sandbox, iframe, inject, injectJsTag) => {
   const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({
@@ -30,7 +29,7 @@ createIframe("app",(sandbox, iframe, inject, injectJsTag) => {
     console.log("injected vue2");
   }, 1000);
 });
-createIframe("vue3",(sandbox, iframe, inject, injectJsTag) => {
+createIframe("vue3", (sandbox, iframe, inject, injectJsTag) => {
   const vue3 = `
 						const { createApp, ref, h } = Vue;
 
@@ -58,14 +57,11 @@ createIframe("vue3",(sandbox, iframe, inject, injectJsTag) => {
 
 						app.mount("#vue3");
 				`;
-  injectJsTag("https://unpkg.com/vue@next", iframe);
-  // js 是异步的, 要等待返回
-  setTimeout(() => {
+  injectJsTag("https://unpkg.com/vue@next", iframe, () => {
     inject(vue3, iframe, "module");
-    console.log("injected vue3");
-  }, 3000);
+  });
 });
-createIframe("react17",(sandbox, iframe, inject, injectJsTag) => {
+createIframe("react17", (sandbox, iframe, inject, injectJsTag) => {
   const react = `
 							const { useState } = React;
 
@@ -86,11 +82,10 @@ createIframe("react17",(sandbox, iframe, inject, injectJsTag) => {
 
 						ReactDOM.render( React.createElement(App, null),document.querySelector('#react17'));
 				`;
-  injectJsTag("./react.development.js", iframe);
-  injectJsTag("./react-dom.development.js", iframe);
-  // js 是异步的, 要等待返回
-  setTimeout(() => {
-    inject(react, iframe, "module");
-    console.log("injected react");
-  }, 3000);
+  injectJsTag("./react.development.js", iframe, () => {
+    injectJsTag("./react-dom.development.js", iframe, () => {
+      // js 是异步的, 要等待返回
+      inject(react, iframe, "module");
+    });
+  });
 });
