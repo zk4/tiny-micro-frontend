@@ -108,7 +108,6 @@
 								  }).$mount(shadowContent);
 
 								`;
-
         const vue3 = `
 						const { createApp, ref, h } = Vue;
 
@@ -128,7 +127,7 @@
 
 							render() {
 								return h('div', [
-									h('button', { onClick: this.incrementCounter }, 'Vue btn (click me)'),
+									h('button', { onClick: this.incrementCounter }, 'Vue 3 btn (click me)'),
 									h('label', this.counter)
 								]);
 							}
