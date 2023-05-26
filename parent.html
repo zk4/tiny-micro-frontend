@@ -38,6 +38,21 @@
           }
           script.textContent = code;
           oldiframeAppendChild(script);
+					script.onreadystatechange = function() {
+          if (this.readyState == 'complete') {
+						console.log("js injected")
+          }
+        }
+        }
+        function injectJSTag(src, frame ) {
+          const script = oldIframeCreateElement("script");
+          script.src = src;
+          oldiframeAppendChild(script);
+					script.onreadystatechange = function() {
+          if (this.readyState == 'complete') {
+						console.log(`js tag injected: ${src}`)
+          }
+        }
         }
 
         // proxy iframe createElement to parent createElement
@@ -115,7 +130,12 @@
 
 								`;
 
-        inject(userJSCode, iframe, true);
+				// TODO: wait for vue runtime to load.
+				// so what is the exact timing?
+				// then inject
+				setTimeout(()=>{
+        	inject(userJSCode, iframe, true);
+				},100)
       };
     </script>
   </body>
