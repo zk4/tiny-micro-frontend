@@ -23,11 +23,7 @@ createIframe("app", (iframe, inject, injectJsTag) => {
 								  }).$mount("#app");
 
 								`;
-  // js 是异步的, 要等待返回
-  setTimeout(() => {
-    inject(vue2Code, iframe, "module");
-    console.log("injected vue2");
-  }, 1000);
+  inject(vue2Code, iframe, "module");
 });
 createIframe("vue3", (iframe, inject, injectJsTag) => {
   const vue3 = `
