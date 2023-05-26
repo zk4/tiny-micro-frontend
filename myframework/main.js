@@ -21,7 +21,7 @@ createIframe((sandbox, iframe, inject, injectJsTag) => {
 												createElement('label', this.counter)
 											]);
 										}
-								  }).$mount(shadowContent);
+								  }).$mount("#app");
 
 								`;
   // js 是异步的, 要等待返回
@@ -56,7 +56,7 @@ createIframe((sandbox, iframe, inject, injectJsTag) => {
 							}
 						});
 
-						app.mount(shadowContent);
+						app.mount("#app");
 				`;
   injectJsTag("https://unpkg.com/vue@next", iframe);
   // js 是异步的, 要等待返回
@@ -84,7 +84,7 @@ createIframe((sandbox, iframe, inject, injectJsTag) => {
 									)
 						}
 
-						ReactDOM.render( React.createElement(App, null),shadowContent);
+						ReactDOM.render( React.createElement(App, null),document.querySelector('#app'));
 				`;
   injectJsTag("./react.development.js", iframe);
   injectJsTag("./react-dom.development.js", iframe);

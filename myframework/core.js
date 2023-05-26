@@ -39,6 +39,22 @@ function createIframe(onloaded) {
       },
     });
 
+		Object.defineProperty(iframe.contentWindow.document, "getElementById", {
+			get() {
+				return function (...args) {
+					debugger
+					return window.parent.document.getElementById(...args);
+				};
+			},
+		});
+		Object.defineProperty(iframe.contentWindow.document, "querySelector", {
+			get() {
+				return function (selector) {
+					return window.parent.document.querySelector(selector).shadowRoot.firstChild
+				};
+			},
+		});
+
     // proxy iframe appendChild to parent appendChild
     Object.defineProperty(iframe.contentWindow.document.body, "appendChild", {
       get() {
@@ -48,21 +64,19 @@ function createIframe(onloaded) {
       },
     });
 
-    // TODO: no need to execute in iframe context
-    const createShadowDom = `
-            		  const shadowContainer = document.createElement("div");
-									document.body.appendChild(shadowContainer)
-									const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
-									const shadowStyle = document.createElement("style");
-									shadowStyle.textContent = "label { color: red}";
-									shadowRoot.appendChild(shadowStyle);
+    //  no need to execute in iframe context
+		const shadowContainer = document.createElement("div");
+		shadowContainer.id ="app"
+		document.body.appendChild(shadowContainer)
+		const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+		const shadowStyle = document.createElement("style");
+		shadowStyle.textContent = "label { color: red}";
+		shadowRoot.appendChild(shadowStyle);
 
-									const shadowContent = document.createElement("div");
-									shadowContent.id ="app"
-									shadowRoot.appendChild(shadowContent);
-								`;
+		const shadowContent = document.createElement("div");
+		shadowRoot.appendChild(shadowContent);
 
-    inject(createShadowDom, iframe);
+    // inject(createShadowDom, iframe);
     onloaded(this, iframe, inject, injectJsTag);
   };
   return iframe;
