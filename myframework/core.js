@@ -1,4 +1,4 @@
-function createIframe(id,onloaded) {
+function createIframe(id, onloaded) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -13,7 +13,13 @@ function createIframe(id,onloaded) {
       oldDocument.body
     );
 
-    function inject(code,  type) {
+    function inject0(kvs) {
+      const script = oldIframeCreateElement("script");
+			// Object.entries(kvs).map(([k, v]) => (script[k] = v));
+			Object.assign(script, kvs);
+      oldiframeAppendChild(script);
+    }
+    function injectCode(code, type) {
       const script = oldIframeCreateElement("script");
       if (type) {
         script.type = type;
@@ -21,54 +27,57 @@ function createIframe(id,onloaded) {
       script.textContent = code;
       oldiframeAppendChild(script);
     }
-    function injectJsTag(src,  onload) {
+    function injectJsTag(src, onload) {
       const script = oldIframeCreateElement("script");
       script.src = src;
-			script.type = 'text/javascript';
- 			script.onload = function() {
-				onload && onload();
-      }
+      script.type = "text/javascript";
+      script.onload = function () {
+        onload && onload();
+      };
       oldiframeAppendChild(script);
     }
 
-		Object.defineProperty(iframe.contentWindow.document, "getElementById", {
-			get() {
-				return function (selector) {
-				// TODO:
-				// normal getElementById does not work
-					return window.parent.document.getElementById(selector).shadowRoot.getElementById(selector);
-				};
-			},
-		});
-		Object.defineProperty(iframe.contentWindow.document, "querySelector", {
-			get() {
-				return function (selector) {
-				// TODO:
-				// normal querySelector does not work
-					return window.parent.document.querySelector(selector).shadowRoot.querySelector(selector)
-				};
-			},
-		});
+    Object.defineProperty(iframe.contentWindow.document, "getElementById", {
+      get() {
+        return function (selector) {
+          // TODO:
+          // normal getElementById does not work
+          return window.parent.document
+            .getElementById(selector)
+            .shadowRoot.getElementById(selector);
+        };
+      },
+    });
+    Object.defineProperty(iframe.contentWindow.document, "querySelector", {
+      get() {
+        return function (selector) {
+          // TODO:
+          // normal querySelector does not work
+          return window.parent.document
+            .querySelector(selector)
+            .shadowRoot.querySelector(selector);
+        };
+      },
+    });
 
-		// this is shadow dom wrapper for css isolation
+    // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
     //      sahdowRoot
     //           <style>
     //           <div ...>    <---  this is where app goes
-		const shadowContainer = document.createElement("div");
-		shadowContainer.id =id
-		document.body.appendChild(shadowContainer)
-		const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
-		const shadowStyle = document.createElement("style");
-		shadowStyle.textContent = "label { color: red}";
-		shadowRoot.appendChild(shadowStyle);
+    const shadowContainer = document.createElement("div");
+    shadowContainer.id = id;
+    document.body.appendChild(shadowContainer);
+    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+    const shadowStyle = document.createElement("style");
+    shadowStyle.textContent = "label { color: red}";
+    shadowRoot.appendChild(shadowStyle);
 
-		const shadowContent = document.createElement("div");
-		shadowContent.id = id
-		shadowRoot.appendChild(shadowContent);
+    const shadowContent = document.createElement("div");
+    shadowContent.id = id;
+    shadowRoot.appendChild(shadowContent);
 
-    onloaded(inject, injectJsTag);
+    onloaded({ inject0, injectCode, injectJsTag });
   };
   return iframe;
 }
-

@@ -1,4 +1,4 @@
-createIframe("react17", (inject, injectJsTag) => {
+createIframe("react17", ({injectCode, injectJsTag}) => {
   const react = `
 							const { useState } = React;
 
@@ -22,7 +22,7 @@ createIframe("react17", (inject, injectJsTag) => {
   injectJsTag("./react.development.js", () => {
     injectJsTag("./react-dom.development.js", () => {
       // js 是异步的, 要等待返回
-      inject(react, "module");
+      injectCode(react, "module");
     });
   });
 });
