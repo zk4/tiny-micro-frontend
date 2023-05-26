@@ -1,4 +1,4 @@
-function createIframe(onloaded) {
+function createIframe(id,onloaded) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -41,16 +41,15 @@ function createIframe(onloaded) {
 
 		Object.defineProperty(iframe.contentWindow.document, "getElementById", {
 			get() {
-				return function (...args) {
-					debugger
-					return window.parent.document.getElementById(...args);
+				return function (selector) {
+					return window.parent.document.getElementById(selector).shadowRoot.getElementById(selector);
 				};
 			},
 		});
 		Object.defineProperty(iframe.contentWindow.document, "querySelector", {
 			get() {
 				return function (selector) {
-					return window.parent.document.querySelector(selector).shadowRoot.firstChild
+					return window.parent.document.querySelector(selector).shadowRoot.querySelector(selector)
 				};
 			},
 		});
@@ -66,7 +65,7 @@ function createIframe(onloaded) {
 
     //  no need to execute in iframe context
 		const shadowContainer = document.createElement("div");
-		shadowContainer.id ="app"
+		shadowContainer.id =id
 		document.body.appendChild(shadowContainer)
 		const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 		const shadowStyle = document.createElement("style");
@@ -74,6 +73,7 @@ function createIframe(onloaded) {
 		shadowRoot.appendChild(shadowStyle);
 
 		const shadowContent = document.createElement("div");
+		shadowContent.id = id
 		shadowRoot.appendChild(shadowContent);
 
     // inject(createShadowDom, iframe);
