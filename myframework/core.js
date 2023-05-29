@@ -68,7 +68,9 @@ function createIframe(id, onloaded) {
       },
     });
 
-		let oldAppendChild =iframe.contentWindow.document.head.appendChild.bind(iframe.contentWindow.document.head)
+    let oldAppendChild = iframe.contentWindow.document.head.appendChild.bind(
+      iframe.contentWindow.document.head
+    );
     Object.defineProperty(iframe.contentWindow.document.head, "appendChild", {
       get() {
         return function (child) {
@@ -77,11 +79,11 @@ function createIframe(id, onloaded) {
               "http://localhost:5000/myframework",
               "http://localhost:7200"
             );
-						return oldAppendChild(child);
-          }else
-					{
-						return window.document.head.appendChild(child);
-					}
+            return oldAppendChild(child);
+          } else if (child.type === "text/css") {
+            return window.parent.document.querySelector('#app').shadowRoot.appendChild(child);
+          }
+
         };
       },
     });
