@@ -1,8 +1,11 @@
+// id: ex: app.  NOT #app
 function createIframe(id, onloaded) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
   document.body.appendChild(iframe);
+
+	const idSelector = '#'+id
 
   iframe.onload = function () {
     let oldWindow = iframe.contentWindow;
@@ -42,7 +45,7 @@ function createIframe(id, onloaded) {
         return function (selector) {
           // TODO:
           // normal getElementById does not work
-          if (selector === "#App" || selector === "#app") {
+          if (selector === idSelector) {
             return window.parent.document
               .getElementById(selector)
               .shadowRoot.getElementById(selector);
@@ -57,7 +60,7 @@ function createIframe(id, onloaded) {
         return function (selector) {
           // TODO:
           // normal querySelector does not work
-          if (selector === "#App" || selector === "#app") {
+          if (selector === idSelector) {
             return window.parent.document
               .querySelector(selector)
               .shadowRoot.querySelector(selector);
@@ -81,13 +84,13 @@ function createIframe(id, onloaded) {
             );
             return oldAppendChild(child);
           } else if (child.type === "text/css") {
-            return window.parent.document.querySelector('#app').shadowRoot.appendChild(child);
+            return window.parent.document
+							.querySelector(idSelector)?.shadowRoot.appendChild(child);
           }
-
         };
       },
     });
-    document.head.appendChild;
+
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
     //      sahdowRoot
