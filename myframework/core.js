@@ -68,66 +68,58 @@ function createIframe(id, onloaded) {
       },
     });
 
-    const intercept1 = (root, funcname) => {
-      if (root[funcname]) {
-        let oldFunc = root[funcname].bind(root);
-        Object.defineProperty(root, funcname, {
-          get() {
-            return function (child) {
-
-              let ret = oldFunc(child);
-              if (ret.src) {
-    						console.log(ret)
-                    ret.src = ret.src.replace(
-                      "http://localhost:5000",
-                      "http://localhost:7200"
-                    );
-							}
-
-							
-    					// recursivly intercept created element
-              if (funcname === "createElement") {
-                intercept1(ret, "appendChild");
-              }
-              return ret;
-            };
-          },
-        });
-      }
-    };
-    intercept1(iframe.contentWindow.document, "createElement");
-    intercept1(iframe.contentWindow.document, "appendChild");
-
-    /* const intercept0 = (root, funcname) => { */
+    /* const intercept1 = (root, funcname) => { */
     /*   if (root[funcname]) { */
     /*     let oldFunc = root[funcname].bind(root); */
     /*     Object.defineProperty(root, funcname, { */
     /*       get() { */
     /*         return function (child) { */
-    /*           if (child.src) { */
-    /*             child.src = child.src.replace( */
-    /*               "http://localhost:5000", */
-    /*               "http://localhost:7200" */
-    /*             ); */
-    /*             return oldFunc(child); */
-    /*           } else { */
-    /*             // html css go to shadowdom */
-    /*             return window.parent.document */
-    /*               .querySelector(idSelector) */
-    /*               ?.shadowRoot[funcname](child); */
+    /**/
+    /*           let ret = oldFunc(child); */
+    /*           if (ret.src) { */
+    /* 						console.log(ret) */
+    /*                 ret.src = ret.src.replace( */
+    /*                   "http://localhost:5000", */
+    /*                   "http://localhost:7200" */
+    /*                 ); */
+				/* 			} */
+    /**/
+				/* 			 */
+    /* 					// recursivly intercept created element */
+    /*           if (funcname === "createElement") { */
+    /*             intercept1(ret, "appendChild"); */
     /*           } */
+    /*           return ret; */
     /*         }; */
     /*       }, */
     /*     }); */
     /*   } */
     /* }; */
-    /* function interceptAppendChild(root) { */
-    /*   intercept0(root, "appendChild"); */
-    /* } */
-    /* function interceptInsertBefore(root) { */
-    /*   intercept0(root, "insertBefore"); */
-    /* } */
-    /* interceptAppendChild(iframe.contentWindow.document.head); */
+    /* intercept1(iframe.contentWindow.document, "createElement"); */
+    /* intercept1(iframe.contentWindow.document.head, "appendChild"); */
+
+    function interceptAppendChild(root) {
+        let oldFunc = root.appendChild.bind(root);
+        Object.defineProperty(root, "appendChild", {
+          get() {
+            return function (child) {
+              if (child.src) {
+                child.src = child.src.replace(
+                  "http://localhost:5000",
+                  "http://localhost:7200"
+                );
+                return oldFunc(child);
+              } else {
+                // html css go to shadowdom
+                return window.parent.document
+                  .querySelector(idSelector)
+                  ?.shadowRoot.appendChild(child);
+              }
+            };
+          },
+        });
+    }
+    interceptAppendChild(iframe.contentWindow.document.head);
 
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">

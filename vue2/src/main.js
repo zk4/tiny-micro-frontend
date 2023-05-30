@@ -40,30 +40,30 @@ Vue.use(VueRouter);
 
 Vue.config.productionTip = false;
 
-/* const intercept0 = (root, funcname) => { */
-/*   if (root[funcname]) { */
-/*     let oldFunc = root[funcname].bind(root); */
-/*     console.log("intercept:", funcname, root); */
-/*     Object.defineProperty(root, funcname, { */
-/*       get() { */
-/*         return function (child) { */
-/*           let ret = oldFunc(child); */
-/*           console.log(funcname, "now:", child.nodeName, child); */
-/*           if (child.nodeName === "IMG") { */
-/*             child.src = */
-/*               "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
-/*           } */
-/*           if (funcname === "createElement") { */
-/*             intercept0(ret, "appendChild"); */
-/*           } */
-/*           return ret; */
-/*         }; */
-/*       }, */
-/*     }); */
-/*   } */
-/* }; */
-/* intercept0(document, "createElement"); */
-/* intercept0(document, "appendChild"); */
+const intercept0 = (root, funcname) => {
+  if (root[funcname]) {
+    let oldFunc = root[funcname].bind(root);
+    console.log("intercept:", funcname, root);
+    Object.defineProperty(root, funcname, {
+      get() {
+        return function (child) {
+          let ret = oldFunc(child);
+          console.log(funcname, "now:", child.nodeName, child);
+          if (child.nodeName === "IMG") {
+            child.src =
+              "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png";
+          }
+          if (funcname === "createElement") {
+            intercept0(ret, "appendChild");
+          }
+          return ret;
+        };
+      },
+    });
+  }
+};
+intercept0(document, "createElement");
+intercept0(document, "appendChild");
 
 if (window.__POWERED_BY_WUJIE__) {
   let instance;
