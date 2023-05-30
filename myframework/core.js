@@ -142,15 +142,6 @@ function createIframe(id, onloaded) {
     shadowContent.id = id;
     shadowRoot.appendChild(shadowContent);
 
-    /* function printAllNodes(element) { */
-    /*   if (element.childNodes.length > 0) { */
-    /*     element.childNodes.forEach((e) => printAllNodes(e)); */
-    /*   } else { */
-    /*     console.log(element); */
-    /*   } */
-    /* } */
-    /* printAllNodes(shadowRoot); */
-
     onloaded({inject0, injectCode, injectJsTag});
   };
   return iframe;
