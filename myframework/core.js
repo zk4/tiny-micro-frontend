@@ -1,11 +1,10 @@
-// id: ex: app.  NOT #app
 function createIframe(id, onloaded) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
   document.body.appendChild(iframe);
 
-	const idSelector = '#'+id
+  const idSelector = "#" + id;
 
   iframe.onload = function () {
     let oldWindow = iframe.contentWindow;
@@ -58,8 +57,6 @@ function createIframe(id, onloaded) {
     Object.defineProperty(iframe.contentWindow.document, "querySelector", {
       get() {
         return function (selector) {
-          // TODO:
-          // normal querySelector does not work
           if (selector === idSelector) {
             return window.parent.document
               .querySelector(selector)
@@ -71,25 +68,66 @@ function createIframe(id, onloaded) {
       },
     });
 
-    let oldAppendChild = iframe.contentWindow.document.head.appendChild.bind(
-      iframe.contentWindow.document.head
-    );
-    Object.defineProperty(iframe.contentWindow.document.head, "appendChild", {
-      get() {
-        return function (child) {
-          if (child.src) {
-            child.src = child.src.replace(
-              "http://localhost:5000/myframework",
-              "http://localhost:7200"
-            );
-            return oldAppendChild(child);
-          } else if (child.type === "text/css") {
-            return window.parent.document
-							.querySelector(idSelector)?.shadowRoot.appendChild(child);
-          }
-        };
-      },
-    });
+    const intercept1 = (root, funcname) => {
+      if (root[funcname]) {
+        let oldFunc = root[funcname].bind(root);
+        Object.defineProperty(root, funcname, {
+          get() {
+            return function (child) {
+
+              let ret = oldFunc(child);
+              if (ret.src) {
+    						console.log(ret)
+                    ret.src = ret.src.replace(
+                      "http://localhost:5000",
+                      "http://localhost:7200"
+                    );
+							}
+
+							
+    					// recursivly intercept created element
+              if (funcname === "createElement") {
+                intercept1(ret, "appendChild");
+              }
+              return ret;
+            };
+          },
+        });
+      }
+    };
+    intercept1(iframe.contentWindow.document, "createElement");
+    intercept1(iframe.contentWindow.document, "appendChild");
+
+    /* const intercept0 = (root, funcname) => { */
+    /*   if (root[funcname]) { */
+    /*     let oldFunc = root[funcname].bind(root); */
+    /*     Object.defineProperty(root, funcname, { */
+    /*       get() { */
+    /*         return function (child) { */
+    /*           if (child.src) { */
+    /*             child.src = child.src.replace( */
+    /*               "http://localhost:5000", */
+    /*               "http://localhost:7200" */
+    /*             ); */
+    /*             return oldFunc(child); */
+    /*           } else { */
+    /*             // html css go to shadowdom */
+    /*             return window.parent.document */
+    /*               .querySelector(idSelector) */
+    /*               ?.shadowRoot[funcname](child); */
+    /*           } */
+    /*         }; */
+    /*       }, */
+    /*     }); */
+    /*   } */
+    /* }; */
+    /* function interceptAppendChild(root) { */
+    /*   intercept0(root, "appendChild"); */
+    /* } */
+    /* function interceptInsertBefore(root) { */
+    /*   intercept0(root, "insertBefore"); */
+    /* } */
+    /* interceptAppendChild(iframe.contentWindow.document.head); */
 
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
@@ -109,6 +147,15 @@ function createIframe(id, onloaded) {
     const shadowContent = document.createElement("div");
     shadowContent.id = id;
     shadowRoot.appendChild(shadowContent);
+
+    /* function printAllNodes(element) { */
+    /*   if (element.childNodes.length > 0) { */
+    /*     element.childNodes.forEach((e) => printAllNodes(e)); */
+    /*   } else { */
+    /*     console.log(element); */
+    /*   } */
+    /* } */
+    /* printAllNodes(shadowRoot); */
 
     onloaded({ inject0, injectCode, injectJsTag });
   };

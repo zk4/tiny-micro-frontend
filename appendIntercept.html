@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const intercept0 = (root, funcname) => {
+        if (root[funcname]) {
+          let oldFunc = root[funcname].bind(root);
+					console.log("intercept:",funcname, root)
+          Object.defineProperty(root, funcname, {
+            get() {
+              return function (child) {
+                let ret =  oldFunc(child);
+								console.log(funcname,"now:",child)
+								if(funcname === "createElement"){
+      						intercept0(ret,"appendChild");
+								}
+								return ret;
+
+              };
+            },
+          });
+        }
+      };
+			intercept0(document,"createElement");
+			intercept0(document,"appendChild");
+
+      const inputElement = document.createElement("label");
+      inputElement.innerText = "Enter text...";
+
+      const inputElement2 = document.createElement("label");
+      inputElement2.innerText = "Enter text...";
+			inputElement.appendChild(inputElement2)
+			document.body.appendChild(inputElement)
+    </script>
+  </body>
+</html>

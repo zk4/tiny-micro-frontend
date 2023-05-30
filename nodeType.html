@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>Node Types Example</title>
+    <script type="text/javascript">
+		  //  我是没发现这有什么作用
+      //<![CDATA[
+      document.write("<");
+      //]]>
+    </script>
+    <script>
+      let all = new Set();
+      function logNodeTypes() {
+        traverseNode(document);
+      }
+
+      function traverseNode(node) {
+        if (node.attributes && node.attributes.length > 0) {
+          all.add(node.attributes[0].nodeType);
+          /* console.log(node.attributes[0].nodeType,node.attributes[0]); */
+        }
+        console.log(node.nodeType, node);
+        all.add(node.nodeType);
+
+        var child = node.firstChild;
+        while (child) {
+          traverseNode(child);
+          child = child.nextSibling;
+        }
+      }
+      const fragment = document.createDocumentFragment();
+      // 11
+      all.add(fragment.nodeType);
+    </script>
+  </head>
+  <body>
+    <div id="elementNode">Element Node</div>
+    <div id="attributeNode" custom-attribute="example">Attribute Node</div>
+    Text Node
+    <!-- Comment Node -->
+    <script type="text/javascript">
+      // Code here
+    </script>
+    <style>
+      /* Styles here */
+    </style>
+
+		<!-- 我是没发现这有什么作用, 在 chrome 里查看直接被注释了 -->
+    <![CDATA[ 这是一段 CDATA 代码 ]]>
+    <script>
+      logNodeTypes();
+      all.forEach((a) => console.log(a));
+      console.log(document);
+    </script>
+  </body>
+</html>

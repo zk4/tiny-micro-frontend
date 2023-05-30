@@ -8,8 +8,8 @@
 # todo
 
 0. [x] true isloation between different apps
-1. [ ] loading url with js and css in sandbox
-2. [ ] routing pattern design
+1. [ ] routing work
+2. [ ] loading url with js and css in sandbox
 
 # how to dev
 
