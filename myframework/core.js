@@ -4,6 +4,9 @@ function createIframe(id, onloaded) {
   iframe.src = "about:blank";
   document.body.appendChild(iframe);
 
+  // TODO: just for debug
+  window.iframe = iframe
+
   const idSelector = "#" + id;
 
   iframe.onload = function () {
@@ -11,9 +14,7 @@ function createIframe(id, onloaded) {
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind to restore the contenxt
     let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
-    let oldiframeAppendChild = oldDocument.body.appendChild.bind(
-      oldDocument.body
-    );
+    let oldiframeAppendChild = oldDocument.body.appendChild.bind(oldDocument.body);
 
     function inject0(kvs) {
       const script = oldIframeCreateElement("script");
@@ -38,6 +39,7 @@ function createIframe(id, onloaded) {
       };
       oldiframeAppendChild(script);
     }
+
 
     Object.defineProperty(iframe.contentWindow.document, "getElementById", {
       get() {
@@ -68,58 +70,53 @@ function createIframe(id, onloaded) {
       },
     });
 
-    /* const intercept1 = (root, funcname) => { */
-    /*   if (root[funcname]) { */
-    /*     let oldFunc = root[funcname].bind(root); */
-    /*     Object.defineProperty(root, funcname, { */
-    /*       get() { */
-    /*         return function (child) { */
-    /**/
-    /*           let ret = oldFunc(child); */
-    /*           if (ret.src) { */
-    /* 						console.log(ret) */
-    /*                 ret.src = ret.src.replace( */
-    /*                   "http://localhost:5000", */
-    /*                   "http://localhost:7200" */
-    /*                 ); */
-				/* 			} */
-    /**/
-				/* 			 */
-    /* 					// recursivly intercept created element */
-    /*           if (funcname === "createElement") { */
-    /*             intercept1(ret, "appendChild"); */
-    /*           } */
-    /*           return ret; */
-    /*         }; */
-    /*       }, */
-    /*     }); */
-    /*   } */
-    /* }; */
-    /* intercept1(iframe.contentWindow.document, "createElement"); */
-    /* intercept1(iframe.contentWindow.document.head, "appendChild"); */
 
-    function interceptAppendChild(root) {
-        let oldFunc = root.appendChild.bind(root);
-        Object.defineProperty(root, "appendChild", {
-          get() {
-            return function (child) {
-              if (child.src) {
-                child.src = child.src.replace(
-                  "http://localhost:5000",
-                  "http://localhost:7200"
-                );
-                return oldFunc(child);
-              } else {
-                // html css go to shadowdom
-                return window.parent.document
-                  .querySelector(idSelector)
-                  ?.shadowRoot.appendChild(child);
-              }
-            };
-          },
-        });
-    }
-    interceptAppendChild(iframe.contentWindow.document.head);
+    Object.defineProperty(iframe.contentWindow.document.head, "appendChild", {
+      get() {
+        return function (child) {
+          if (child.src) {
+            child.src = child.src.replace(
+              "http://localhost:5000",
+              "http://localhost:7200"
+            );
+            return oldiframeAppendChild(child);
+          } else {
+            // html css go to shadowdom
+            return window.parent.document
+              .querySelector(idSelector)
+              ?.shadowRoot.appendChild(child);
+          }
+        };
+      },
+    });
+
+    let oldiframeCreateElement = oldDocument.createElement.bind(oldDocument);
+    Object.defineProperty(iframe.contentWindow.document, "createElement", {
+      get() {
+        return function (child) {
+          let element = oldiframeCreateElement(child)
+          if (element.nodeName === "IMG") {
+            // this does not work in vue. src is reset aftermath 
+            /* element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
+          element.src = "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"
+          } else {
+            let oldf = element.appendChild.bind(element);
+            Object.defineProperty(element, "appendChild", {
+              get() {
+                return function (child) {
+                  if (child.nodeName === "IMG") {
+                    child.src = "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"
+                  }
+                  return oldf(child)
+                }
+              },
+            });
+
+          }
+          return element;
+        };
+      },
+    });
 
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
@@ -129,7 +126,7 @@ function createIframe(id, onloaded) {
     const shadowContainer = document.createElement("div");
     shadowContainer.id = id;
     document.body.appendChild(shadowContainer);
-    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+    const shadowRoot = shadowContainer.attachShadow({mode: "open"});
     const shadowStyle = document.createElement("style");
 
     //TODO: inject isolate css here
@@ -149,7 +146,7 @@ function createIframe(id, onloaded) {
     /* } */
     /* printAllNodes(shadowRoot); */
 
-    onloaded({ inject0, injectCode, injectJsTag });
+    onloaded({inject0, injectCode, injectJsTag});
   };
   return iframe;
 }
