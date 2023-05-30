@@ -98,14 +98,19 @@ function createIframe(id, onloaded) {
           if (element.nodeName === "IMG") {
             // this does not work in vue. src is reset aftermath 
             /* element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
-          element.src = "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"
           } else {
+            // we could proxy the img parent's appendChild function
             let oldf = element.appendChild.bind(element);
             Object.defineProperty(element, "appendChild", {
               get() {
                 return function (child) {
                   if (child.nodeName === "IMG") {
-                    child.src = "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"
+                    if (child.src && child.src.startsWith("http")) {
+                      child.src = child.src.replace(
+                        "http://localhost:5000",
+                        "http://localhost:7200"
+                      );
+                    }
                   }
                   return oldf(child)
                 }
