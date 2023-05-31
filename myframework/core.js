@@ -1,4 +1,4 @@
-function createAppComponent(id, onloaded) {
+function createAppComponent({ id, onloaded }) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";

@@ -7,6 +7,20 @@
     p {
       background-color: green;
     }
+		#container {
+			display: flex;
+
+		}
+		#left {
+			height: 300px;
+			width: 50%;
+			background: red;
+		}
+		#right {
+			height: 300px;
+			width: 50%;
+			background: green;
+		}
   </style>
 
   <body>
@@ -15,13 +29,18 @@
     <label>1111</label>
     <hr />
 		ShadowDOM & iframe
+		<div id="container">
+			<div id="left"></div>
+			<div id="right"></div>
+
+		</div>
 
     <script src="./core.js"> </script>
-    <script src="./vue2.js"> </script>
-		<script src="./vue3.js"> </script>
-		<script src="./react17.js"> </script>
+  <!--   <script src="./vue2.js"> </script> -->
+		<!-- <script src="./vue3.js"> </script> -->
+		<!-- <script src="./react17.js"> </script> -->
     <script src="./vue2_host.js"> </script>
-    <!-- <script src="./vue2_1_host.js"> </script> -->
+    <script src="./vue2_1_host.js"> </script>
 
     <!-- not ok -->
     <!-- <script src="./vue3_host.js"> </script> -->
