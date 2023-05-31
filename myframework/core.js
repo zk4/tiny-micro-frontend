@@ -1,4 +1,4 @@
-function createAppComponent({ id, onloaded }) {
+function createAppComponent({id, url}) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -8,9 +8,9 @@ function createAppComponent({ id, onloaded }) {
   window.iframe = iframe;
 
   const idSelector = "#" + id;
+  const mainUrl = window.location.origin
 
   iframe.onload = function () {
-    console.log("onload");
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind or arrow function to restore the contenxt
@@ -57,9 +57,9 @@ function createAppComponent({ id, onloaded }) {
       oldiframeAppendChild(script);
     }
 
-		// TODO: this should comment out,
-		// because this function get the actual subapp <div id="#app">This is vue </div>
-		// interceptMethodCalls should get the same, intead get <div id="#app"></div>
+    // TODO: this should comment out,
+    // because this function get the actual subapp <div id="#app">This is vue </div>
+    // interceptMethodCalls should get the same, intead get <div id="#app"></div>
     Object.defineProperty(iframe.contentWindow.document, "querySelector", {
       get() {
         return function (selector) {
@@ -67,16 +67,16 @@ function createAppComponent({ id, onloaded }) {
             let ret = window.parent.document
               .querySelector(selector)
               .shadowRoot.querySelector(selector);
-						console.log(ret)
-						return ret;
+            console.log(ret)
+            return ret;
           } else {
-						return null;
+            return null;
           }
         };
       },
     });
 
-    const detachedDocument = readHTML("http://localhost:7200");
+    const detachedDocument = readHTML(url);
 
     const links = detachedDocument.getElementsByTagName("link");
     const scripts = detachedDocument.getElementsByTagName("script");
@@ -87,7 +87,7 @@ function createAppComponent({ id, onloaded }) {
     shadowContainer.id = id;
     window.document.body.appendChild(shadowContainer);
 
-    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
+    const shadowRoot = shadowContainer.attachShadow({mode: "open"});
     shadowRoot.appendChild(document.createElement("head"));
     shadowRoot.appendChild(divs[0]);
 
@@ -102,39 +102,28 @@ function createAppComponent({ id, onloaded }) {
             fn?.before && fn.before(key, args);
             try {
               let target = obj;
-              let i = 0;
               if (obj === iframe.contentWindow.document) {
-                i = 1;
                 target = document;
               }
               if (obj.nodeName === "HEAD") {
                 if (args[0].nodeName === "STYLE") {
-                i = 2;
                   target = shadowRoot.firstChild;
                 } else if (args[0].nodeName === "SCRIPT") {
-                  args[0].src = args[0].src.replace(
-                    "http://localhost:5000",
-                    "http://localhost:7200"
-                  );
-                i = 3;
+                  args[0].src = args[0].src.replace(mainUrl, url);
                   target = iframe.contentWindow.document.body;
                 }
               }
 
               if (obj.nodeName === "BODY") {
                 if (args[0].nodeName === "SCRIPT") {
-                i = 4;
                   target = iframe.contentWindow.document.body;
-                  args[0].src = args[0].src.replace(
-                    "http://localhost:5000",
-                    "http://localhost:7200"
-                  );
+                  args[0].src = args[0].src.replace(mainUrl, url);
                 }
               }
               /* console.log("args=>",args) */
               const ret = Reflect.apply(origProp, target, args);
               if (key.startsWith("query")) {
-                console.log(i,target.nodeName, key, args,ret);
+                console.log(i, target.nodeName, key, args, ret);
               }
               /* console.log("intercept===>", fn, args); */
               fn?.after && fn.after(key, args, ret);
@@ -147,7 +136,7 @@ function createAppComponent({ id, onloaded }) {
         } else {
           if (prop && prop.nodeName === "HEAD") {
             /* console.log("===>", shadowRoot.firstChild); */
-            interceptMethodCalls(prop,  {
+            interceptMethodCalls(prop, {
               before: (fn, args) => {
                 /* console.log("before===>", fn, args); */
               },
@@ -159,11 +148,11 @@ function createAppComponent({ id, onloaded }) {
 
     const after = (fnName, fnArgs, ret) => {
       if (ret && ret.nodeName === "IMG") {
-        interceptMethodCalls(ret,  {
+        interceptMethodCalls(ret, {
           before: (fn, args) => {
             // this should reset src to subapp's url
             if (fn === "setAttribute" && args[0] === "src") {
-              args[1] = "http://localhost:7200/" + args[1];
+              args[1] = url + args[1];
             } else {
               /* console.log("else before===>", fn, args); */
             }
@@ -173,15 +162,15 @@ function createAppComponent({ id, onloaded }) {
       }
     };
 
-    interceptMethodCalls(iframe.contentWindow.document, { after });
+    interceptMethodCalls(iframe.contentWindow.document, {after});
 
     // TODO: should I append links?
     // Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l))
     for (let s of scripts) {
       const script = document.createElement("script");
       script.src = s.src.replace(
-        "http://localhost:5000",
-        "http://localhost:7200"
+        mainUrl,
+        url
       );
       iframe.contentWindow.document.body.appendChild(script);
     }
