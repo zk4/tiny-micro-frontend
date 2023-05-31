@@ -14,7 +14,7 @@ function createAppComponent({ id, onloaded }) {
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind or arrow function to restore the contenxt
-    /* let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument); */
+		// let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
     let oldIframeCreateElement = (x) => oldDocument.createElement(x);
     let oldiframeAppendChild = oldDocument.body.appendChild.bind(
       oldDocument.body
@@ -105,11 +105,11 @@ function createAppComponent({ id, onloaded }) {
     Object.defineProperty(iframe.contentWindow.document, "createElement", {
       get() {
         return function (child) {
-          // TODO: what is difference between iframe.contentWindow.document.createElement and window.document.createElement?
+          // TODO: what is the difference between iframe.contentWindow.document.createElement and window.document.createElement?
           let element = document.createElement(child);
           if (element.nodeName === "IMG") {
             // this does not work in vue. src is reset aftermath
-            /* element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
+						// element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png";
           } else {
             // we could proxy the img parent's appendChild function
             let oldf = element.appendChild.bind(element);
