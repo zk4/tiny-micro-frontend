@@ -6,7 +6,7 @@ function readHTML(url)
 	xmlhttp.open("GET",url,false);
 	xmlhttp.send();
 	const parser=new DOMParser();
-	console.log(xmlhttp.responseText)
+	/* console.log(xmlhttp.responseText) */
 	let detachedDOM = parser.parseFromString(xmlhttp.responseText,"text/html");
 	return detachedDOM;
 }

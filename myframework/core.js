@@ -83,7 +83,7 @@ function createAppComponent({ id, onloaded }) {
             );
             return oldiframeAppendChild(child);
           } else {
-            // html css go to shadowdom
+            // html css go to shadowDOM
             return window.parent.document
               .querySelector(idSelector)
               ?.shadowRoot.appendChild(child);
@@ -126,39 +126,28 @@ function createAppComponent({ id, onloaded }) {
     });
 
     // this is shadow dom wrapper for css isolation
-    // <div id="sandbox_{id}">
-    //      sahdowRoot        <---   shadowRoot
-    //           <div ...>    <---  this is where app mount, typically it's user defined HTML element like <div id="#app"/>, but there is a problem to get this id.
     const shadowContainer = document.createElement("div");
-    // id is like "app", not "#app"
     shadowContainer.id = id;
     document.body.appendChild(shadowContainer);
     const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 
-    // demo: inject isolate css here
-    // we could inject tag to the shadow dom to get the same result
-    // const shadowStyle = document.createElement("style");
-    // shadowStyle.textContent = "label { color: red}";
-    // shadowRoot.appendChild(shadowStyle);
-
-    /* const shadowContent = document.createElement("div"); */
-    /* shadowContent.id = id; */
-    /* shadowRoot.appendChild(shadowContent); */
-
     const detachedDocument = readHTML("http://localhost:7200");
 
-    // FAILED TRY 1: script won't execute, we need to manully construct
-    /* const html = detachedDocument.getElementsByTagName("HTML") */
-    /* shadowContent.appendChild(html[0]) */
+		// WARNING:
+		// detachedDocument only take effect on html and css after appendChild
+    // script won't execute. We need to manully construct
+		// const html = detachedDocument.getElementsByTagName("HTML")
+		// shadowContent.appendChild(html[0])
 
     const links = detachedDocument.getElementsByTagName("link");
     const scripts = detachedDocument.getElementsByTagName("script");
     const divs = detachedDocument.getElementsByTagName("div");
 
-    for (let s of scripts) console.log(s);
-    // FAILED TRY 2: script won't execute, we need to manully construct
     shadowRoot.appendChild(divs[0]);
-    /* Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l)) */
+
+    // TODO: should I append links?
+    // Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l))
+
     for (let s of scripts) {
       const script = document.createElement("script");
       script.src = s.src.replace(
@@ -167,8 +156,6 @@ function createAppComponent({ id, onloaded }) {
       );
       iframe.contentWindow.document.body.appendChild(script);
     }
-
-    /* onloaded({ inject0, injectCode, injectJsTag }); */
   };
   return iframe;
 }
