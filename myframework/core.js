@@ -14,7 +14,7 @@ function createAppComponent({ id, onloaded }) {
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind or arrow function to restore the contenxt
-		// let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
+    // let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
     let oldIframeCreateElement = (x) => oldDocument.createElement(x);
     let oldiframeAppendChild = oldDocument.body.appendChild.bind(
       oldDocument.body
@@ -101,38 +101,38 @@ function createAppComponent({ id, onloaded }) {
       },
     });
 
-    let oldiframeCreateElement = oldDocument.createElement.bind(oldDocument);
-    Object.defineProperty(iframe.contentWindow.document, "createElement", {
-      get() {
-        return function (child) {
-          // TODO: what is the difference between iframe.contentWindow.document.createElement and window.document.createElement?
-          let element = document.createElement(child);
-          if (element.nodeName === "IMG") {
-            // this does not work in vue. src is reset aftermath
-						// element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png";
-          } else {
-            // we could proxy the img parent's appendChild function
-            let oldf = element.appendChild.bind(element);
-            Object.defineProperty(element, "appendChild", {
-              get() {
-                return function (child) {
-                  if (child.nodeName === "IMG") {
-                    if (child.src && child.src.startsWith("http")) {
-                      child.src = child.src.replace(
-                        "http://localhost:5000",
-                        "http://localhost:7200"
-                      );
-                    }
-                  }
-                  return oldf(child);
-                };
-              },
-            });
-          }
-          return element;
-        };
-      },
-    });
+    /* let oldiframeCreateElement = oldDocument.createElement.bind(oldDocument); */
+    /* Object.defineProperty(iframe.contentWindow.document, "createElement", { */
+    /*   get() { */
+    /*     return function (child) { */
+    /*       // TODO: what is the difference between iframe.contentWindow.document.createElement and window.document.createElement? */
+    /*       let element = document.createElement(child); */
+    /*       if (element.nodeName === "IMG") { */
+    /*         // this does not work in vue. src is reset aftermath */
+    /* 		// element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
+    /*       } else { */
+    /*         // we could proxy the img parent's appendChild function */
+    /*         let oldf = element.appendChild.bind(element); */
+    /*         Object.defineProperty(element, "appendChild", { */
+    /*           get() { */
+    /*             return function (child) { */
+    /*               if (child.nodeName === "IMG") { */
+    /*                 if (child.src && child.src.startsWith("http")) { */
+    /*                   child.src = child.src.replace( */
+    /*                     "http://localhost:5000", */
+    /*                     "http://localhost:7200" */
+    /*                   ); */
+    /*                 } */
+    /*               } */
+    /*               return oldf(child); */
+    /*             }; */
+    /*           }, */
+    /*         }); */
+    /*       } */
+    /*       return element; */
+    /*     }; */
+    /*   }, */
+    /* }); */
 
     // intercept all function of obj
     function interceptMethodCalls(obj, fn) {
@@ -141,17 +141,35 @@ function createAppComponent({ id, onloaded }) {
         if (typeof prop === "function") {
           const origProp = prop;
           obj[key] = (...args) => {
-            fn(key, args);
-            return Reflect.apply(origProp, obj, args);
+            fn.before && fn.before(key, args);
+            try {
+              const ret = Reflect.apply(origProp,obj === iframe.contentWindow.document? document: obj, args);
+              fn.after && fn.after(key, args, ret);
+              return ret;
+            } catch (e) {
+              //TODO: this shoud handle
+              console.log(e);
+            }
           };
         }
       }
     }
 
-    const handleMethodCall = (fnName, fnArgs) =>
-      console.log(`${fnName} called with `, fnArgs);
+    const after = (fnName, fnArgs, ret) => {
+      if (ret && ret.nodeName === "IMG") {
+        interceptMethodCalls(ret, {
+          before: (fn, args) => {
+            if (fn === "setAttribute" && args[0]==="src") {
+							args[1]='http://localhost:7200/'+args[2]
+              console.log("-----------", fn, args);
+            }
+          },
+        });
+        console.log(`${fnName} called with `, fnArgs);
+      }
+    };
 
-    interceptMethodCalls(iframe.contentWindow.document, handleMethodCall);
+    interceptMethodCalls(iframe.contentWindow.document, { after });
 
     // this is shadow dom wrapper for css isolation
     const shadowContainer = document.createElement("div");
