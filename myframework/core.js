@@ -160,7 +160,7 @@ function createAppComponent({ id, onloaded }) {
         interceptMethodCalls(ret, {
           before: (fn, args) => {
             if (fn === "setAttribute" && args[0]==="src") {
-							args[1]='http://localhost:7200/'+args[2]
+							args[1]='http://localhost:7200/'+args[1]
               console.log("-----------", fn, args);
             }
           },
