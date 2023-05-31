@@ -57,55 +57,24 @@ function createAppComponent({ id, onloaded }) {
       oldiframeAppendChild(script);
     }
 
-    Object.defineProperty(iframe.contentWindow.document, "getElementById", {
-      get() {
-        return function (selector) {
-          // TODO:
-          // normal getElementById does not work
-          return window.parent.document
-            .getElementById(selector)
-            .shadowRoot.getElementById(selector);
-        };
-      },
-    });
+		// TODO: this should comment out,
+		// because this function get the actual subapp <div id="#app">This is vue </div>
+		// interceptMethodCalls should get the same, intead get <div id="#app"></div>
     Object.defineProperty(iframe.contentWindow.document, "querySelector", {
       get() {
         return function (selector) {
           if (selector === idSelector) {
-            return window.parent.document
+            let ret = window.parent.document
               .querySelector(selector)
               .shadowRoot.querySelector(selector);
+						console.log(ret)
+						return ret;
           } else {
-            return window.document.querySelector(selector);
+						return null;
           }
         };
       },
     });
-
-    /* Object.defineProperty(iframe.contentWindow.document.head, "appendChild", { */
-    /*   get() { */
-    /*     return function (child) { */
-    /*       if (child.src) { */
-    /*         child.src = child.src.replace( */
-    /*           "http://localhost:5000", */
-    /*           "http://localhost:7200" */
-    /*         ); */
-    /*         return oldiframeAppendChild(child); */
-    /*       } else { */
-    /*         // html css go to shadowDOM */
-    /*         return window.parent.document */
-    /*           .querySelector(idSelector) */
-    /*           ?.shadowRoot.appendChild(child); */
-    /*       } */
-    /*     }; */
-    /*   }, */
-    /* }); */
-
-    // this is shadow dom wrapper for css isolation
-    const shadowContainer = document.createElement("div");
-    shadowContainer.id = id;
-    document.body.appendChild(shadowContainer);
-    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 
     const detachedDocument = readHTML("http://localhost:7200");
 
@@ -113,16 +82,18 @@ function createAppComponent({ id, onloaded }) {
     const scripts = detachedDocument.getElementsByTagName("script");
     const divs = detachedDocument.getElementsByTagName("div");
 
+    // this is shadow dom wrapper for css isolation
+    const shadowContainer = document.createElement("div");
+    shadowContainer.id = id;
+    window.document.body.appendChild(shadowContainer);
+
+    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
     shadowRoot.appendChild(document.createElement("head"));
-    // append DOM
     shadowRoot.appendChild(divs[0]);
-
-
-
 
     // intercept all function of obj
     // obj could be anything: window.document, iframe.contentWindow.document
-    function interceptMethodCalls(obj,proxy, fn) {
+    function interceptMethodCalls(obj, fn) {
       for (let key in obj) {
         const prop = obj[key];
         if (typeof prop === "function") {
@@ -130,11 +101,42 @@ function createAppComponent({ id, onloaded }) {
           obj[key] = (...args) => {
             fn?.before && fn.before(key, args);
             try {
-              const ret = Reflect.apply(
-                origProp,
-                proxy,
-                args
-              );
+              let target = obj;
+              let i = 0;
+              if (obj === iframe.contentWindow.document) {
+                i = 1;
+                target = document;
+              }
+              if (obj.nodeName === "HEAD") {
+                if (args[0].nodeName === "STYLE") {
+                i = 2;
+                  target = shadowRoot.firstChild;
+                } else if (args[0].nodeName === "SCRIPT") {
+                  args[0].src = args[0].src.replace(
+                    "http://localhost:5000",
+                    "http://localhost:7200"
+                  );
+                i = 3;
+                  target = iframe.contentWindow.document.body;
+                }
+              }
+
+              if (obj.nodeName === "BODY") {
+                if (args[0].nodeName === "SCRIPT") {
+                i = 4;
+                  target = iframe.contentWindow.document.body;
+                  args[0].src = args[0].src.replace(
+                    "http://localhost:5000",
+                    "http://localhost:7200"
+                  );
+                }
+              }
+              /* console.log("args=>",args) */
+              const ret = Reflect.apply(origProp, target, args);
+              if (key.startsWith("query")) {
+                console.log(i,target.nodeName, key, args,ret);
+              }
+              /* console.log("intercept===>", fn, args); */
               fn?.after && fn.after(key, args, ret);
               return ret;
             } catch (e) {
@@ -144,11 +146,11 @@ function createAppComponent({ id, onloaded }) {
           };
         } else {
           if (prop && prop.nodeName === "HEAD") {
-						console.log("===>",shadowRoot.firstChild)
-            interceptMethodCalls(prop,shadowRoot.firstChild, {
-							before: (fn, args) => {
-								console.log("before===>",fn,args)
-							},
+            /* console.log("===>", shadowRoot.firstChild); */
+            interceptMethodCalls(prop,  {
+              before: (fn, args) => {
+                /* console.log("before===>", fn, args); */
+              },
             });
           }
         }
@@ -157,21 +159,21 @@ function createAppComponent({ id, onloaded }) {
 
     const after = (fnName, fnArgs, ret) => {
       if (ret && ret.nodeName === "IMG") {
-        interceptMethodCalls(ret,ret, {
+        interceptMethodCalls(ret,  {
           before: (fn, args) => {
             // this should reset src to subapp's url
             if (fn === "setAttribute" && args[0] === "src") {
               args[1] = "http://localhost:7200/" + args[1];
+            } else {
+              /* console.log("else before===>", fn, args); */
             }
           },
         });
-        console.log(`${fnName} called with `, fnArgs);
+        /* console.log(`${fnName} called with `, fnArgs); */
       }
     };
 
-    interceptMethodCalls(iframe.contentWindow.document,document, { after });
-
-
+    interceptMethodCalls(iframe.contentWindow.document, { after });
 
     // TODO: should I append links?
     // Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l))
