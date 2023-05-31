@@ -1,4 +1,4 @@
-createIframe("react17", ({injectCode, injectJsTag}) => {
+createAppComponent("react17", ({injectCode, injectJsTag}) => {
   const react = `
 							const { useState } = React;
 

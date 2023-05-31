@@ -1,4 +1,4 @@
-createIframe("vue3", ({ inject0 }) => {
+createAppComponent("vue3", ({ inject0 }) => {
   const vue3 = `
 						const { createApp, ref, h } = Vue;
 

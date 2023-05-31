@@ -1,5 +1,5 @@
 
-createIframe("vue2", ({inject0}) => {
+createAppComponent("vue2", ({inject0}) => {
   const vue2Code = `
 									import Vue from "./vue.esm.browser.js";
 									new Vue({

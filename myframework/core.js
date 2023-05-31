@@ -1,4 +1,4 @@
-function createIframe(id, onloaded) {
+function createAppComponent(id, onloaded) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -52,13 +52,9 @@ function createIframe(id, onloaded) {
         return function (selector) {
           // TODO:
           // normal getElementById does not work
-          if (selector === idSelector) {
             return window.parent.document
               .getElementById(selector)
               .shadowRoot.getElementById(selector);
-          } else {
-            return window.document.getElementById(selector);
-          }
         };
       },
     });
@@ -99,6 +95,7 @@ function createIframe(id, onloaded) {
     Object.defineProperty(iframe.contentWindow.document, "createElement", {
       get() {
         return function (child) {
+					// TODO: what is difference between iframe.contentWindow.document.createElement and window.document.createElement?
           let element = document.createElement(child);
           if (element.nodeName === "IMG") {
             // this does not work in vue. src is reset aftermath
