@@ -7,9 +7,8 @@
 
 # todo
 
-0. [x] true isloation between different apps
-1. [ ] routing work
-2. [ ] loading url with js and css in sandbox
+- [ ] css position is not right in shadowDOM
+- [ ] proxy all document function from iframe to parent
 
 # how to dev
 
