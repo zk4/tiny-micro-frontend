@@ -20,6 +20,15 @@ function createAppComponent({ id, onloaded }) {
       oldDocument.body
     );
 
+    function readHTML(url) {
+      const xmlhttp = new XMLHttpRequest();
+      // TODO: maybe we can use async,modify 3th arg to true
+      xmlhttp.open("GET", url, false);
+      xmlhttp.send();
+      const parser = new DOMParser();
+      return parser.parseFromString(xmlhttp.responseText, "text/html");
+    }
+
     function inject0(kvs) {
       const script = oldIframeCreateElement("script");
       // Object.entries(kvs).map(([k, v]) => (script[k] = v));
@@ -125,6 +134,25 @@ function createAppComponent({ id, onloaded }) {
       },
     });
 
+    // intercept all function of obj
+    function interceptMethodCalls(obj, fn) {
+      for (let key in obj) {
+        const prop = obj[key];
+        if (typeof prop === "function") {
+          const origProp = prop;
+          obj[key] = (...args) => {
+            fn(key, args);
+            return Reflect.apply(origProp, obj, args);
+          };
+        }
+      }
+    }
+
+    const handleMethodCall = (fnName, fnArgs) =>
+      console.log(`${fnName} called with `, fnArgs);
+
+    interceptMethodCalls(iframe.contentWindow.document, handleMethodCall);
+
     // this is shadow dom wrapper for css isolation
     const shadowContainer = document.createElement("div");
     shadowContainer.id = id;
@@ -132,12 +160,6 @@ function createAppComponent({ id, onloaded }) {
     const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 
     const detachedDocument = readHTML("http://localhost:7200");
-
-		// WARNING:
-		// detachedDocument only take effect on html and css after appendChild
-    // script won't execute. We need to manully construct
-		// const html = detachedDocument.getElementsByTagName("HTML")
-		// shadowContent.appendChild(html[0])
 
     const links = detachedDocument.getElementsByTagName("link");
     const scripts = detachedDocument.getElementsByTagName("script");
@@ -147,7 +169,6 @@ function createAppComponent({ id, onloaded }) {
 
     // TODO: should I append links?
     // Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l))
-
     for (let s of scripts) {
       const script = document.createElement("script");
       script.src = s.src.replace(
