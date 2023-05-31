@@ -13,7 +13,8 @@ import "antd/es/modal/style/css";
 import "antd/es/select/style/css";
 import "antd/es/popover/style/css";
 
-const basename = process.env.NODE_ENV === "production" ? "/demo-react17/" : "";
+/* const basename = process.env.NODE_ENV === "production" ? "/demo-react17/" : ""; */
+const basename = process.env.NODE_ENV === "production" ? "" : "";
 
 const Home = () => (
   <div>

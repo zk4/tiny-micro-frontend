@@ -30,10 +30,14 @@ function createIframe(id, onloaded) {
       script.textContent = code;
       oldiframeAppendChild(script);
     }
-    function injectJsTag(src, onload) {
+    function injectJsTag(src, onload,isModule) {
       const script = oldIframeCreateElement("script");
       script.src = src;
-      script.type = "text/javascript";
+      if(isModule){
+        script.type = "module";
+      }else{
+        script.type = "text/javascript";
+      }
       script.onload = function () {
         onload && onload();
       };
@@ -94,7 +98,7 @@ function createIframe(id, onloaded) {
     Object.defineProperty(iframe.contentWindow.document, "createElement", {
       get() {
         return function (child) {
-          let element = oldiframeCreateElement(child)
+          let element = document.createElement(child)
           if (element.nodeName === "IMG") {
             // this does not work in vue. src is reset aftermath 
             /* element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */

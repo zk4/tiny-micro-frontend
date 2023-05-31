@@ -10,7 +10,7 @@ import "./index.css";
 ReactDOM.render(
   // 严格模式，antd的弹窗会warning
   <App />,
-  document.getElementById("root")
+  document.getElementById("app")
 );
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
