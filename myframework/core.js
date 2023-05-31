@@ -5,16 +5,19 @@ function createIframe(id, onloaded) {
   document.body.appendChild(iframe);
 
   // TODO: just for debug
-  window.iframe = iframe
+  window.iframe = iframe;
 
   const idSelector = "#" + id;
 
   iframe.onload = function () {
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
-    // when assign function like this, you must use call/bind to restore the contenxt
-    let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument);
-    let oldiframeAppendChild = oldDocument.body.appendChild.bind(oldDocument.body);
+    // when assign function like this, you must use call/bind or arrow function to restore the contenxt
+    /* let oldIframeCreateElement = oldDocument.createElement.bind(oldDocument); */
+    let oldIframeCreateElement = (x) => oldDocument.createElement(x);
+    let oldiframeAppendChild = oldDocument.body.appendChild.bind(
+      oldDocument.body
+    );
 
     function inject0(kvs) {
       const script = oldIframeCreateElement("script");
@@ -30,12 +33,12 @@ function createIframe(id, onloaded) {
       script.textContent = code;
       oldiframeAppendChild(script);
     }
-    function injectJsTag(src, onload,isModule) {
+    function injectJsTag(src, onload, isModule) {
       const script = oldIframeCreateElement("script");
       script.src = src;
-      if(isModule){
+      if (isModule) {
         script.type = "module";
-      }else{
+      } else {
         script.type = "text/javascript";
       }
       script.onload = function () {
@@ -43,7 +46,6 @@ function createIframe(id, onloaded) {
       };
       oldiframeAppendChild(script);
     }
-
 
     Object.defineProperty(iframe.contentWindow.document, "getElementById", {
       get() {
@@ -74,7 +76,6 @@ function createIframe(id, onloaded) {
       },
     });
 
-
     Object.defineProperty(iframe.contentWindow.document.head, "appendChild", {
       get() {
         return function (child) {
@@ -98,9 +99,9 @@ function createIframe(id, onloaded) {
     Object.defineProperty(iframe.contentWindow.document, "createElement", {
       get() {
         return function (child) {
-          let element = document.createElement(child)
+          let element = document.createElement(child);
           if (element.nodeName === "IMG") {
-            // this does not work in vue. src is reset aftermath 
+            // this does not work in vue. src is reset aftermath
             /* element.src= "https://www.baidu.com/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png"; */
           } else {
             // we could proxy the img parent's appendChild function
@@ -116,37 +117,38 @@ function createIframe(id, onloaded) {
                       );
                     }
                   }
-                  return oldf(child)
-                }
+                  return oldf(child);
+                };
               },
             });
-
           }
           return element;
         };
       },
     });
 
+
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
-    //      sahdowRoot
-    //           <style>
-    //           <div ...>    <---  this is where app goes
+		//      sahdowRoot        <---   shadowRoot
+		//           <div ...>    <---  this is where app mount, typically it's user defined HTML element like <div id="#app"/>, but there is a problem to get this id.
     const shadowContainer = document.createElement("div");
+		// id is like "app", not "#app"
     shadowContainer.id = id;
     document.body.appendChild(shadowContainer);
-    const shadowRoot = shadowContainer.attachShadow({mode: "open"});
-    const shadowStyle = document.createElement("style");
+    const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 
-    //TODO: inject isolate css here
-    shadowStyle.textContent = "label { color: red}";
-    shadowRoot.appendChild(shadowStyle);
+    // demo: inject isolate css here
+		// we could inject tag to the shadow dom to get the same result
+    // const shadowStyle = document.createElement("style");
+		// shadowStyle.textContent = "label { color: red}";
+		// shadowRoot.appendChild(shadowStyle);
 
     const shadowContent = document.createElement("div");
     shadowContent.id = id;
     shadowRoot.appendChild(shadowContent);
 
-    onloaded({inject0, injectCode, injectJsTag});
+    onloaded({ inject0, injectCode, injectJsTag });
   };
   return iframe;
 }
