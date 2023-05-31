@@ -1,8 +1,4 @@
-function createAppComponent(
-	{
-		id,
-		onloaded }
-) {
+function createAppComponent({ id, onloaded }) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -14,7 +10,7 @@ function createAppComponent(
   const idSelector = "#" + id;
 
   iframe.onload = function () {
-		console.log("onload")
+    console.log("onload");
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind or arrow function to restore the contenxt
@@ -145,11 +141,34 @@ function createAppComponent(
     // shadowStyle.textContent = "label { color: red}";
     // shadowRoot.appendChild(shadowStyle);
 
-    const shadowContent = document.createElement("div");
-    shadowContent.id = id;
-    shadowRoot.appendChild(shadowContent);
+    /* const shadowContent = document.createElement("div"); */
+    /* shadowContent.id = id; */
+    /* shadowRoot.appendChild(shadowContent); */
 
-    onloaded({ inject0, injectCode, injectJsTag });
+    const detachedDocument = readHTML("http://localhost:7200");
+
+    // FAILED TRY 1: script won't execute, we need to manully construct
+    /* const html = detachedDocument.getElementsByTagName("HTML") */
+    /* shadowContent.appendChild(html[0]) */
+
+    const links = detachedDocument.getElementsByTagName("link");
+    const scripts = detachedDocument.getElementsByTagName("script");
+    const divs = detachedDocument.getElementsByTagName("div");
+
+    for (let s of scripts) console.log(s);
+    // FAILED TRY 2: script won't execute, we need to manully construct
+    shadowRoot.appendChild(divs[0]);
+    /* Array.prototype.forEach.call(links,l=>shadowRoot.appendChild(l)) */
+    for (let s of scripts) {
+      const script = document.createElement("script");
+      script.src = s.src.replace(
+        "http://localhost:5000",
+        "http://localhost:7200"
+      );
+      iframe.contentWindow.document.body.appendChild(script);
+    }
+
+    /* onloaded({ inject0, injectCode, injectJsTag }); */
   };
   return iframe;
 }

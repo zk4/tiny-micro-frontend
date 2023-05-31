@@ -1,5 +1,5 @@
 
-function readDOM(url)
+function readHTML(url)
 {
 	xmlhttp=new XMLHttpRequest();
 	// TODO: maybe we can use async,modify 3th arg to true
@@ -12,7 +12,7 @@ function readDOM(url)
 }
 
 
-/* let dom = readDOM('http://127.0.0.1:7200') */
+/* let dom = readHTML('http://127.0.0.1:7200') */
 /* function parse(url) */
 /* console.log(dom.getElementsByTagName("div")[0]) */
 /* console.log(dom.getElementsByTagName("link")) */
