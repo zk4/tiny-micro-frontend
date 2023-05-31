@@ -1,4 +1,8 @@
-function createAppComponent({ id, onloaded }) {
+function createAppComponent(
+	{
+		id,
+		onloaded }
+) {
   const iframe = document.createElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
@@ -10,6 +14,7 @@ function createAppComponent({ id, onloaded }) {
   const idSelector = "#" + id;
 
   iframe.onload = function () {
+		console.log("onload")
     let oldWindow = iframe.contentWindow;
     let oldDocument = iframe.contentWindow.document;
     // when assign function like this, you must use call/bind or arrow function to restore the contenxt
@@ -52,9 +57,9 @@ function createAppComponent({ id, onloaded }) {
         return function (selector) {
           // TODO:
           // normal getElementById does not work
-            return window.parent.document
-              .getElementById(selector)
-              .shadowRoot.getElementById(selector);
+          return window.parent.document
+            .getElementById(selector)
+            .shadowRoot.getElementById(selector);
         };
       },
     });
@@ -95,7 +100,7 @@ function createAppComponent({ id, onloaded }) {
     Object.defineProperty(iframe.contentWindow.document, "createElement", {
       get() {
         return function (child) {
-					// TODO: what is difference between iframe.contentWindow.document.createElement and window.document.createElement?
+          // TODO: what is difference between iframe.contentWindow.document.createElement and window.document.createElement?
           let element = document.createElement(child);
           if (element.nodeName === "IMG") {
             // this does not work in vue. src is reset aftermath
@@ -124,22 +129,21 @@ function createAppComponent({ id, onloaded }) {
       },
     });
 
-
     // this is shadow dom wrapper for css isolation
     // <div id="sandbox_{id}">
-		//      sahdowRoot        <---   shadowRoot
-		//           <div ...>    <---  this is where app mount, typically it's user defined HTML element like <div id="#app"/>, but there is a problem to get this id.
+    //      sahdowRoot        <---   shadowRoot
+    //           <div ...>    <---  this is where app mount, typically it's user defined HTML element like <div id="#app"/>, but there is a problem to get this id.
     const shadowContainer = document.createElement("div");
-		// id is like "app", not "#app"
+    // id is like "app", not "#app"
     shadowContainer.id = id;
     document.body.appendChild(shadowContainer);
     const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
 
     // demo: inject isolate css here
-		// we could inject tag to the shadow dom to get the same result
+    // we could inject tag to the shadow dom to get the same result
     // const shadowStyle = document.createElement("style");
-		// shadowStyle.textContent = "label { color: red}";
-		// shadowRoot.appendChild(shadowStyle);
+    // shadowStyle.textContent = "label { color: red}";
+    // shadowRoot.appendChild(shadowStyle);
 
     const shadowContent = document.createElement("div");
     shadowContent.id = id;

@@ -63,6 +63,11 @@ Vue.config.productionTip = false;
 /* intercept0(document, "createElement"); */
 /* intercept0(document, "appendChild"); */
 
+window.addEventListener ('message', function(event) {
+    //event.data获取传过来的数据
+		console.log("event from parent",event)
+});
+
 if (window.__POWERED_BY_WUJIE__) {
   let instance;
   window.__WUJIE_MOUNT = () => {
