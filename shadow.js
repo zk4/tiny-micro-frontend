@@ -111,11 +111,11 @@ class AppComponent {
                 // create does not matter what parent is, it matters when parent add it
                 const ret = oldf.apply(triggerDOM, val);
                 if (ret.nodeName === "IMG") {
-                  // who would append?
                   console.log("NOT exit function in targetDOM", a, val, ret);
 									const oldSetAttribute =  ret.setAttribute.bind(ret)
                   Object.defineProperty(ret, "setAttribute", {
                     get() {
+											// handle img url  
 											return (...val2) => {
 												if(val2[0]==="src"){
 													val2[1]="http://127.0.0.1:7200/"+val2[1]
