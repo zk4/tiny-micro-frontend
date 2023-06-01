@@ -112,16 +112,15 @@ class AppComponent {
                 const ret = oldf.apply(triggerDOM, val);
                 if (ret.nodeName === "IMG") {
                   console.log("NOT exit function in targetDOM", a, val, ret);
-									const oldSetAttribute =  ret.setAttribute.bind(ret)
+									const oldSetAttribute =  ret.setAttribute
                   Object.defineProperty(ret, "setAttribute", {
                     get() {
-											// handle img url  
+											// TODO: refactor out
+											// handle img src rewriting
 											return (...val2) => {
 												if(val2[0]==="src"){
 													val2[1]="http://127.0.0.1:7200/"+val2[1]
 												}
-												// debugger
-												console.log(val2)
 												return oldSetAttribute.apply(ret,val2)
 											};
                     },
