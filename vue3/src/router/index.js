@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory,createWebHashHistory } from "vue-router";
 import Home from "../views/Home.vue";
 const basename = process.env.NODE_ENV === "production" ? "/demo-vue3/" : "";
 
@@ -46,7 +46,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(basename),
+  history: createWebHashHistory(basename),
   routes,
 });
 

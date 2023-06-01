@@ -7,6 +7,9 @@
 
 # todo
 
+- [ ] router 
+ - [ ] hash 
+ - [ ] history
 - [ ] tag have 2 kinds 
  - js
      - [x] link
