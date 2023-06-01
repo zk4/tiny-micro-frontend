@@ -7,8 +7,16 @@
 
 # todo
 
-- [ ] css position is not right in shadowDOM
-- [ ] proxy all document function from iframe to parent
+- [ ] tag have 2 kinds 
+ - link
+ - content
+
+- [ ] element arrow icon does not work
+- [ ] cvue 3 does not work
+- [ ] creact 17 does not work
+- [ ] creact 16 does not work
+- [ ] cvite does not work
+
 
 # how to dev
 

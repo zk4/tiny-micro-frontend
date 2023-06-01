@@ -4,9 +4,9 @@ class DOMContext {
     this.url = new URL(url);
     this.location = window.location;
 
-    this.HTMLDOM = this.#readHTML(url);
+    this.HTMLDOM = this.readHTML(url);
     this.mainUrl = window.location.origin;
-    this.shadowRoot = this.#createShadowRoot();
+    this.shadowRoot = this.createShadowRoot();
     const html = document.createElement("html");
 
     // prevent the shadowRoot from getComputedStyle
@@ -16,18 +16,31 @@ class DOMContext {
         return null;
       }
     })
-    const head = document.createElement("head");
+    this.head = document.createElement("head");
     const body = document.createElement("body");
     const div = document.createElement("div");
     div.id = id;
 
-    html.appendChild(head);
+    html.appendChild(this.head);
     html.appendChild(body);
     body.appendChild(div);
 
     this.shadowRoot.appendChild(html);
   }
-  #readHTML(url) {
+  injectStyleText(text){
+    const script = document.createElement("style");
+    script.innerText = text;
+    this.head.appendChild(script);
+  }
+  injectStyleTag(href){
+    debugger
+    const script = document.createElement("style");
+    script.href = href;
+    // script.type = "text/javascript";
+    this.head.appendChild(script);
+
+  }
+  readHTML(url) {
     const xmlhttp = new XMLHttpRequest();
     xmlhttp.open("GET", url, false);
     xmlhttp.send();
@@ -37,17 +50,20 @@ class DOMContext {
   getScripts() {
     let scripts = [];
     const ss = this.HTMLDOM.getElementsByTagName("script");
-    for (let a of ss) scripts.push(a.src.replace(this.location.port, this.url.port));
+    for (let a of ss) scripts.push(a.src);
     return scripts;
   }
-  getLinks() {
-    let scripts = [];
-    const ss = this.HTMLDOM.getElementsByTagName("link");
-    for (let a of ss) scripts.push(a.href.replace(this.location.port, this.url.port));
-    return scripts;
+  getStyles() {
+    let styles = [];
+    const ss = this.HTMLDOM.getElementsByTagName("style");
+    for (let a of ss) styles.push({
+      href: a.href,
+      innerText: a.innerText
+    });
+    return styles;
   }
 
-  #createShadowRoot() {
+  createShadowRoot() {
     const shadowContainer = document.createElement("div");
     document.body.append(shadowContainer);
     return shadowContainer.attachShadow({mode: "open"});
@@ -92,12 +108,30 @@ class AppComponent {
 
     let scs = this.domContext.getScripts();
     for (let i = 0; i < scs.length; i++) {
-      this.jsContext.injectJsTag(scs[i]);
+      this.jsContext.injectJsTag(this.correctUrl(scs[i]));
+    }
+
+    let sts = this.domContext.getStyles();
+    for (let i = 0; i < sts.length; i++) {
+      if(sts[i].href)
+        this.domContext.injectStyleTag(this.correctUrl(sts[i].href));
+      if(sts[i].innerText)
+        this.domContext.injectStyleText(sts[i].innerText);
     }
     this.reWired(
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
+  }
+
+  correctUrl(src){
+    if(src){
+      if(src.startsWith("http"))
+        src = src.replace(this.location.origin, this.url.origin);
+      else
+      src = this.url.origin+"/"+src;
+    }
+    return src
   }
 
   // document api work on triggerDOM will take effect on targetDOM
@@ -137,7 +171,7 @@ class AppComponent {
                           debugger
                         }
                         if (val2[0] === "src") {
-                          val2[1] = that.url.href + val2[1]
+                          val2[1] = that.correctUrl(val2[1])
                         }
                         return oldSetAttribute.apply(ret, val2)
                       };
@@ -161,7 +195,7 @@ class AppComponent {
         Object.defineProperty(triggerDOM, a, {
           configurable: true,
           get() {
-            // shadowDOM does not have head and body like document does
+            // shadowDOM does not have head or body like document does
             // manully redirect it
             if (a === "head") {
               // TODO: refactor this out, so ugly
@@ -175,7 +209,8 @@ class AppComponent {
                       debugger
                     }
                     if (val[0].nodeName === "SCRIPT") {
-                      val[0].src = val[0].src.replace(that.location.port, that.url.port);
+                      val[0].src = that.correctUrl(val[0].src)
+                      console.log("url:",val[0].src)
                       return iFrameHeadAppendChild(val[0]);
                     } else return oldAppend.apply(head, val);
                   };
