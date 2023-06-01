@@ -8,8 +8,12 @@
 # todo
 
 - [ ] tag have 2 kinds 
- - link
- - content
+ - js
+     - [x] link
+     - [ ] innerText
+ - css  
+     - [ ] link
+     - [x] innerText
 
 - [ ] element arrow icon does not work
 - [ ] cvue 3 does not work
