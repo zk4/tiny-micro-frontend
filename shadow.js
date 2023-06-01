@@ -16,6 +16,7 @@ class DOMContext {
     body.appendChild(div);
 
     this.shadowRoot.appendChild(html);
+
   }
   #readHTML(url) {
     const xmlhttp = new XMLHttpRequest();
@@ -59,53 +60,57 @@ function reConnect(triggerDOM, targetDOM) {
       let oldf = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
         get() {
-          if (!targetDOM[a]) {
-            console.log("NOT exit function in targetDOM", a);
-            return oldf;
-          }
           return (...val) => {
-            console.log("2 proxing:", triggerDOM, a, val, "-->", targetDOM);
-            return targetDOM[a].apply(targetDOM, val);
+            if (!targetDOM[a]) {
+              console.log("NOT exit function in targetDOM", a,val);
+              return oldf.apply(triggerDOM,val);
+            } else {
+              console.log("2 proxing:", triggerDOM, a, val, "-->", targetDOM);
+              return targetDOM[a].apply(targetDOM, val);
+            }
           };
         },
       });
     } else {
+
+			// Object.defineProperty not allowed for these properties
       if (["location"].includes(a)) continue;
+
       let old = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
         get() {
-					if(a=="head"){
-						return targetDOM.firstChild.childNodes[0]
-					}
-					if(a=="body"){
-						return targetDOM.firstChild.childNodes[1]
-					}
+					// shadowDOM does not have head and body like document does
+					// manully redirect it
+          if (a == "head") {
+            return targetDOM.firstChild.childNodes[0];
+          }
+          if (a == "body") {
+            return targetDOM.firstChild.childNodes[1];
+          }
           const ret = targetDOM[a];
           if (!ret) {
             console.log("NOT exit property in targetDOM", a);
             return old;
           }
-          console.log("3	proxing:", triggerDOM, a, ret, "-->", targetDOM);
-          // TODO: reConnect
-          const proxyRet = new Proxy(ret, {
-            get(target, p, receiver) {
-              console.log("....");
-              return Reflect.get(target, p);
-            },
-            defineProperty(target, property, attributes) {
-              console.log("....");
-              return Reflect.defineProperty(target, property, attributes);
-            },
-            apply(target, thisArg, argArray) {
-              console.log("....");
-              return Reflect.defineProperty(target, thisArg, argArray);
-            },
-            set(target, p, newValue, receiver) {
-              console.log("....");
-              Reflect.set(target, p, newValue);
-            },
-          });
-          return proxyRet;
+          // const proxyRet = new Proxy(ret, {
+          //   get(target, p, receiver) {
+          //     console.log("....");
+          //     return Reflect.get(target, p);
+          //   },
+          //   defineProperty(target, property, attributes) {
+          //     console.log("....");
+          //     return Reflect.defineProperty(target, property, attributes);
+          //   },
+          //   apply(target, thisArg, argArray) {
+          //     console.log("....");
+          //     return Reflect.defineProperty(target, thisArg, argArray);
+          //   },
+          //   set(target, p, newValue, receiver) {
+          //     console.log("....");
+          //     Reflect.set(target, p, newValue);
+          //   },
+          // });
+          return ret;
         },
       });
     }
@@ -145,8 +150,6 @@ class AppComponent {
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
-
-
   }
 }
 new AppComponent("app", "http://localhost:7200");
