@@ -6,6 +6,7 @@ class DOMContext {
     this.mainUrl = window.location.origin;
     this.shadowRoot = this.#createShadowRoot();
     this.shadowContent = document.createElement("div");
+    this.shadowContent.id = id;
     this.shadowRoot.appendChild(this.shadowContent);
   }
   #readHTML(url) {
@@ -42,6 +43,8 @@ class DOMContext {
 // for instance:
 // - triggerDOM: iframe.contentWindow.document
 // - targetDOM:  shadowRoot
+// - css node in js go into  shadowRoot
+// - non css node in js go into iframe
 function makeDocumentLike(triggerDOM, targetDOM) {
   for (let a in document) {
     // key in doucment not in shadowRoot
@@ -50,14 +53,14 @@ function makeDocumentLike(triggerDOM, targetDOM) {
         // revrse the proxy
         Object.defineProperty(targetDOM, a, {
           get() {
-						console.log("proxing:", targetDOM,a, "-->",triggerDOM);
+            console.log("0 proxing:", targetDOM, a, "-->", triggerDOM);
             return triggerDOM[a].bind(triggerDOM);
           },
         });
       } else {
         Object.defineProperty(targetDOM, a, {
           get() {
-						console.log("proxing:", targetDOM,a, "-->",triggerDOM);
+            console.log("1 proxing:", targetDOM, a, "-->", triggerDOM);
             return triggerDOM[a];
           },
         });
@@ -67,11 +70,23 @@ function makeDocumentLike(triggerDOM, targetDOM) {
       if (typeof document[a] === "function") {
         Object.defineProperty(triggerDOM, a, {
           get() {
-						console.log("proxing:", triggerDOM,a, "-->",targetDOM);
+            console.log("2 proxing:", triggerDOM, a, "-->", targetDOM);
             return targetDOM[a].bind(targetDOM);
           },
         });
       } else {
+        Object.defineProperty(triggerDOM, a, {
+          get() {
+            console.log("3  proxing:", triggerDOM, a, "-->", targetDOM);
+            let ret = new Proxy(targetDOM[a], {
+              get(target, p, receiver) {
+                console.log("logging ..");
+                return Reflect.get(target, p);
+              },
+            });
+            return ret;
+          },
+        });
       }
     }
   }
@@ -116,24 +131,6 @@ class AppComponent {
 
     this.jsContext.injectJsTag(scs[0], false);
     this.jsContext.injectJsTag(scs[1], false);
-    // const div = this.jsContext.iframe.contentWindow.document.createElement("div")
-    // this.jsContext.iframe.contentWindow.document.appendChild(div)
   }
 }
 new AppComponent("app", "http://localhost:7200");
-
-// function createAppComponent({ id, url }) {
-
-//
-//   // append html, css to shadow
-//   injectJsTag("http://localhost:7900/js/chunk-vendors.js", () => {});
-//
-//   // proxy iframe.docuemnt to shadow
-//
-//   // append js to iframe
-//
-//   console.log(dom);
-//
-//   iframe.onload = function () {};
-// }
-// createAppComponent({ id: "app", url: "http://localhost:7200" });
