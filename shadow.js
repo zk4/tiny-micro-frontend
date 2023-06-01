@@ -3,9 +3,10 @@ class DOMContext {
     this.idSelector = "#" + id;
     this.url = url;
     this.HTMLDOM = this.#readHTML(url);
+    this.mainUrl = window.location.origin;
     this.shadowRoot = this.#createShadowRoot();
-    this.shadowContent = document.createElement('div');
-		this.shadowRoot.appendChild(this.shadowContent)
+    this.shadowContent = document.createElement("div");
+    this.shadowRoot.appendChild(this.shadowContent);
   }
   #readHTML(url) {
     const xmlhttp = new XMLHttpRequest();
@@ -15,17 +16,16 @@ class DOMContext {
     return parser.parseFromString(xmlhttp.responseText, "text/html");
   }
   getScripts() {
-    return Array.prototype.map.call(
-      this.HTMLDOM.getElementsByTagName("script"),
-      (a) => a.src
-    );
+    let scripts = [];
+    const ss = this.HTMLDOM.getElementsByTagName("script");
+    for (let a of ss) scripts.push(a.src.replace("5000", "7200"));
+    return scripts;
   }
   getLinks() {
-    // console.log(this.HTMLDOM.getElementsByTagName("link"))
-    return Array.prototype.map.call(
-      this.HTMLDOM.getElementsByTagName("link"),
-      (a) => a.href
-    );
+    let scripts = [];
+    const ss = this.HTMLDOM.getElementsByTagName("link");
+    for (let a of ss) scripts.push(a.href.replace("5000", "7200"));
+    return scripts;
   }
 
   #createShadowRoot() {
@@ -42,36 +42,39 @@ class DOMContext {
 // for instance:
 // - triggerDOM: iframe.contentWindow.document
 // - targetDOM:  shadowRoot
-function makeDocumentLike(triggerDOM,targetDOM) {
-	for (let a in document) {
-		// key in doucment not in shadowRoot
-		if (!targetDOM[a]) {
-			if (typeof document[a] === "function") {
-				// revrse the proxy
-				Object.defineProperty(targetDOM, a, {
-					get() {
-						console.log("proxing:",a)
-						return triggerDOM[a].bind(triggerDOM);
-					},
-				});
-			} else {
-				Object.defineProperty(targetDOM, a, {
-					get() {
-						console.log("proxing:",a)
-						return triggerDOM[a];
-					},
-				});
-			}
-		// key in doucment in shadowRoot, like append
-		} else {
-				Object.defineProperty(triggerDOM, a, {
-					get() {
-						console.log("proxing:",a)
-						return targetDOM[a].bind(targetDOM);
-					},
-				});
-		}
-	}
+function makeDocumentLike(triggerDOM, targetDOM) {
+  for (let a in document) {
+    // key in doucment not in shadowRoot
+    if (!targetDOM[a]) {
+      if (typeof document[a] === "function") {
+        // revrse the proxy
+        Object.defineProperty(targetDOM, a, {
+          get() {
+						console.log("proxing:", targetDOM,a, "-->",triggerDOM);
+            return triggerDOM[a].bind(triggerDOM);
+          },
+        });
+      } else {
+        Object.defineProperty(targetDOM, a, {
+          get() {
+						console.log("proxing:", targetDOM,a, "-->",triggerDOM);
+            return triggerDOM[a];
+          },
+        });
+      }
+      // key in doucment in shadowRoot, like append
+    } else {
+      if (typeof document[a] === "function") {
+        Object.defineProperty(triggerDOM, a, {
+          get() {
+						console.log("proxing:", triggerDOM,a, "-->",targetDOM);
+            return targetDOM[a].bind(targetDOM);
+          },
+        });
+      } else {
+      }
+    }
+  }
 }
 class JSContext {
   injectJsTag(src, isModule) {
@@ -103,16 +106,19 @@ class AppComponent {
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
 
-    makeDocumentLike(this.jsContext.iframe.contentWindow.document,this.domContext.shadowRoot);
+    makeDocumentLike(
+      this.jsContext.iframe.contentWindow.document,
+      this.domContext.shadowRoot
+    );
 
-    console.log(this.domContext.getScripts());
-    console.log(this.domContext.getLinks());
+    let scs = this.domContext.getScripts();
+    console.log(scs);
 
-		const div = this.jsContext.iframe.contentWindow.document.createElement("div")
-		this.jsContext.iframe.contentWindow.document.appendChild(div)
+    this.jsContext.injectJsTag(scs[0], false);
+    this.jsContext.injectJsTag(scs[1], false);
+    // const div = this.jsContext.iframe.contentWindow.document.createElement("div")
+    // this.jsContext.iframe.contentWindow.document.appendChild(div)
   }
-
-
 }
 new AppComponent("app", "http://localhost:7200");
 

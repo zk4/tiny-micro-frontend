@@ -1,5 +1,5 @@
 function createAppComponent({id, url}) {
-  const iframe = document.createElement("iframe");
+  const iframe = document.crenateElement("iframe");
   iframe.hidden = true;
   iframe.src = "about:blank";
   document.body.appendChild(iframe);
