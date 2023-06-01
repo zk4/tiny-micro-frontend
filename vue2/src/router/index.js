@@ -1,4 +1,4 @@
-import Home from "../views/Home.vue";
+import Dialog from "../views/Dialog.vue";
 
 const routes = [
   {
@@ -7,7 +7,7 @@ const routes = [
   },
   {
     path: "/home",
-    component: Home,
+    component: Dialog,
   },
   {
     path: "/dialog",
