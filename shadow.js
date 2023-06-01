@@ -53,8 +53,10 @@ function reConect(triggerDOM, targetDOM) {
         // revrse the proxy
         Object.defineProperty(targetDOM, a, {
           get() {
-            console.log("0 proxing:", targetDOM, a, "-->", triggerDOM);
-            return triggerDOM[a].bind(triggerDOM);
+            return (...val) => {
+              console.log("0 proxing:", targetDOM, a, "-->", triggerDOM);
+              return triggerDOM[a].apply(triggerDOM,val);
+            };
           },
         });
       } else {
@@ -70,8 +72,10 @@ function reConect(triggerDOM, targetDOM) {
       if (typeof document[a] === "function") {
         Object.defineProperty(triggerDOM, a, {
           get() {
-            console.log("2 proxing:", triggerDOM, a, "-->", targetDOM);
-            return targetDOM[a].bind(targetDOM);
+            return (...val) => {
+              console.log("2 proxing:", triggerDOM, a, "-->", targetDOM);
+              return targetDOM[a].apply(targetDOM,val);
+            };
           },
         });
       } else {
