@@ -6,6 +6,14 @@ class DOMContext {
     this.mainUrl = window.location.origin;
     this.shadowRoot = this.#createShadowRoot();
     const html = document.createElement("html");
+
+    // prevent the shadowRoot from getComputedStyle
+    Object.defineProperty(html,'parentNode',{
+      get(){
+        // TODO: should I return iframe.contentWindow.document?
+        return null;
+      }
+    })
     const head = document.createElement("head");
     const body = document.createElement("body");
     const div = document.createElement("div");
@@ -40,7 +48,7 @@ class DOMContext {
   #createShadowRoot() {
     const shadowContainer = document.createElement("div");
     document.body.append(shadowContainer);
-    return shadowContainer.attachShadow({ mode: "open" });
+    return shadowContainer.attachShadow({mode: "open"});
   }
   getShadowRoot() {
     return this.shadowRoot;
@@ -89,10 +97,6 @@ class AppComponent {
 
   // document api work on triggerDOM will take effect on targetDOM
   // for instance:
-  // - triggerDOM: iframe.contentWindow.document
-  // - targetDOM:  shadowRoot
-  // - css node in js go into  shadowRoot
-  // - non css node in js go into iframe
   reConnect(triggerDOM, targetDOM) {
     // TODO: refactor this out, so ugly
     const iFrameHeadAppendChild = triggerDOM.head.appendChild.bind(
@@ -112,32 +116,19 @@ class AppComponent {
                 const ret = oldf.apply(triggerDOM, val);
                 if (ret.nodeName === "IMG") {
                   console.log("NOT exit function in targetDOM", a, val, ret);
-									const oldSetAttribute =  ret.setAttribute
+                  const oldSetAttribute = ret.setAttribute
                   Object.defineProperty(ret, "setAttribute", {
                     get() {
-											// TODO: refactor out
-											// handle img src rewriting
-											return (...val2) => {
-												if(val2[0]==="src"){
-													val2[1]="http://127.0.0.1:7200/"+val2[1]
-												}
-												return oldSetAttribute.apply(ret,val2)
-											};
+                      // TODO: refactor out
+                      // handle img src rewriting
+                      return (...val2) => {
+                        if (val2[0] === "src") {
+                          val2[1] = "http://127.0.0.1:7200/" + val2[1]
+                        }
+                        return oldSetAttribute.apply(ret, val2)
+                      };
                     },
                   });
-                  // const p = new Proxy(ret,{
-                  // 	get(target, p, receiver){
-                  // 		return Reflect.get(target, p)
-                  // 	},
-                  // 	set(target, p, newValue, receiver){
-                  // 		return Reflect.set(target, p, newValue)
-                  // 	},
-                  // 	defineProperty(target, property, attributes){
-                  // 		debugger
-                  // 		return Reflect.defineProperty(target, property, attributes)
-                  // 	}
-                  // })
-                  // return p;
                 }
                 return ret;
               } else {
@@ -196,24 +187,6 @@ class AppComponent {
               );
               return old;
             }
-            // const proxyRet = new Proxy(ret, {
-            //   get(target, p, receiver) {
-            //     console.log("....");
-            //     return Reflect.get(target, p);
-            //   },
-            //   defineProperty(target, property, attributes) {
-            //     console.log("....");
-            //     return Reflect.defineProperty(target, property, attributes);
-            //   },
-            //   apply(target, thisArg, argArray) {
-            //     console.log("....");
-            //     return Reflect.defineProperty(target, thisArg, argArray);
-            //   },
-            //   set(target, p, newValue, receiver) {
-            //     console.log("....");
-            //     Reflect.set(target, p, newValue);
-            //   },
-            // });
             return ret;
           },
         });
