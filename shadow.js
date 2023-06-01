@@ -59,10 +59,12 @@ function reConnect(triggerDOM, targetDOM) {
     if (typeof triggerDOM[a] === "function") {
       let oldf = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
+				configurable: true,
         get() {
           return (...val) => {
             if (!targetDOM[a]) {
-              console.log("NOT exit function in targetDOM", a,val);
+							if(!a.startsWith("create"))
+              	console.log("NOT exit function in targetDOM", a,val);
               return oldf.apply(triggerDOM,val);
             } else {
               console.log("2 proxing:", triggerDOM, a, val, "-->", targetDOM);
@@ -78,18 +80,38 @@ function reConnect(triggerDOM, targetDOM) {
 
       let old = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
+				configurable: true,
         get() {
 					// shadowDOM does not have head and body like document does
 					// manully redirect it
-          if (a == "head") {
-            return targetDOM.firstChild.childNodes[0];
+          if (a === "head") {
+
+						// TODO:vue would attach dynamic js to header
+						const head  = targetDOM.firstChild.childNodes[0];
+						const oldAppend = head.appendChild
+						Object.defineProperty(head,'appendChild', {
+							configurable: true,
+							get(){
+								return (...val)=>{
+									if(val[0].nodeName === "SCRIPT"){
+										val[0].src= val[0].src.replace("5000", "7200")
+									}
+									else
+									return oldAppend.apply(head,val)
+								}
+							}
+						})
+						return head;
           }
-          if (a == "body") {
+          if (a === "body") {
             return targetDOM.firstChild.childNodes[1];
           }
+					if (a === "documentElement"){
+            return targetDOM.firstChild;
+					}
           const ret = targetDOM[a];
           if (!ret) {
-            console.log("NOT exit property in targetDOM", a);
+						console.log("NOT exit property in targetDOM", a, "fallback to:",old);
             return old;
           }
           // const proxyRet = new Proxy(ret, {
