@@ -1,7 +1,9 @@
 class DOMContext {
   constructor(id, url) {
     this.idSelector = "#" + id;
-    this.url = url;
+    this.url = new URL(url);
+    this.location = window.location;
+
     this.HTMLDOM = this.#readHTML(url);
     this.mainUrl = window.location.origin;
     this.shadowRoot = this.#createShadowRoot();
@@ -35,13 +37,13 @@ class DOMContext {
   getScripts() {
     let scripts = [];
     const ss = this.HTMLDOM.getElementsByTagName("script");
-    for (let a of ss) scripts.push(a.src.replace("5000", "7200"));
+    for (let a of ss) scripts.push(a.src.replace(this.location.port, this.url.port));
     return scripts;
   }
   getLinks() {
     let scripts = [];
     const ss = this.HTMLDOM.getElementsByTagName("link");
-    for (let a of ss) scripts.push(a.href.replace("5000", "7200"));
+    for (let a of ss) scripts.push(a.href.replace(this.location.port, this.url.port));
     return scripts;
   }
 
@@ -71,7 +73,7 @@ class JSContext {
     document.body.appendChild(this.iframe);
     this.iframe.onload = () => {
       this.ready = true;
-      console.log("iframe onload");
+      // console.log("iframe onload");
     };
   }
   getIdocument() {
@@ -81,6 +83,9 @@ class JSContext {
 
 class AppComponent {
   constructor(id, url) {
+    this.id = id;
+    this.url = new URL(url);
+    this.location = window.location
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
     this.iframeDocument = this.jsContext.getIdocument();
@@ -89,7 +94,7 @@ class AppComponent {
     for (let i = 0; i < scs.length; i++) {
       this.jsContext.injectJsTag(scs[i]);
     }
-    this.reConnect(
+    this.reWired(
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
@@ -97,7 +102,8 @@ class AppComponent {
 
   // document api work on triggerDOM will take effect on targetDOM
   // for instance:
-  reConnect(triggerDOM, targetDOM) {
+  reWired(triggerDOM, targetDOM) {
+    let that = this
     // TODO: refactor this out, so ugly
     const iFrameHeadAppendChild = triggerDOM.head.appendChild.bind(
       triggerDOM.head
@@ -114,8 +120,9 @@ class AppComponent {
               if (!targetDOM[a]) {
                 // create does not matter what parent is, it matters when parent add it
                 const ret = oldf.apply(triggerDOM, val);
+                console.log("NOT exit function in targetDOM", a, val, ret);
                 if (ret.nodeName === "IMG") {
-                  console.log("NOT exit function in targetDOM", a, val, ret);
+                  // console.log("NOT exit function in targetDOM", a, val, ret);
                   const oldSetAttribute = ret.setAttribute
                   Object.defineProperty(ret, "setAttribute", {
                     get() {
@@ -123,7 +130,7 @@ class AppComponent {
                       // handle img src rewriting
                       return (...val2) => {
                         if (val2[0] === "src") {
-                          val2[1] = "http://127.0.0.1:7200/" + val2[1]
+                          val2[1] = that.url.href + val2[1]
                         }
                         return oldSetAttribute.apply(ret, val2)
                       };
@@ -132,7 +139,7 @@ class AppComponent {
                 }
                 return ret;
               } else {
-                console.log("1 proxing:", triggerDOM, a, val, "-->", targetDOM);
+                // console.log("1 proxing:", triggerDOM, a, val, "-->", targetDOM);
                 return targetDOM[a].apply(targetDOM, val);
               }
             };
@@ -140,7 +147,7 @@ class AppComponent {
         });
         // 2. property reconect
       } else {
-        // Object.defineProperty not allowed for these properties
+        // Object.defineProperty not allowed for these properties for security reason, fair point
         if (["location"].includes(a)) continue;
 
         let old = triggerDOM[a];
@@ -158,7 +165,7 @@ class AppComponent {
                 get() {
                   return (...val) => {
                     if (val[0].nodeName === "SCRIPT") {
-                      val[0].src = val[0].src.replace("5000", "7200");
+                      val[0].src = val[0].src.replace(that.location.port, that.url.port);
                       return iFrameHeadAppendChild(val[0]);
                     } else return oldAppend.apply(head, val);
                   };
@@ -194,4 +201,4 @@ class AppComponent {
     }
   }
 }
-new AppComponent("app", "http://localhost:7200");
+new AppComponent("app", "http://localhost:7300/");
