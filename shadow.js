@@ -45,7 +45,7 @@ class DOMContext {
 // - targetDOM:  shadowRoot
 // - css node in js go into  shadowRoot
 // - non css node in js go into iframe
-function makeDocumentLike(triggerDOM, targetDOM) {
+function reConect(triggerDOM, targetDOM) {
   for (let a in document) {
     // key in doucment not in shadowRoot
     if (!targetDOM[a]) {
@@ -78,13 +78,7 @@ function makeDocumentLike(triggerDOM, targetDOM) {
         Object.defineProperty(triggerDOM, a, {
           get() {
             console.log("3  proxing:", triggerDOM, a, "-->", targetDOM);
-            let ret = new Proxy(targetDOM[a], {
-              get(target, p, receiver) {
-                console.log("logging ..");
-                return Reflect.get(target, p);
-              },
-            });
-            return ret;
+            return targetDOM[a];
           },
         });
       }
@@ -121,7 +115,7 @@ class AppComponent {
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
 
-    makeDocumentLike(
+    reConect(
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
