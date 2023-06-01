@@ -5,9 +5,17 @@ class DOMContext {
     this.HTMLDOM = this.#readHTML(url);
     this.mainUrl = window.location.origin;
     this.shadowRoot = this.#createShadowRoot();
-    this.shadowContent = document.createElement("div");
-    this.shadowContent.id = id;
-    this.shadowRoot.appendChild(this.shadowContent);
+    const html = document.createElement("html");
+    const head = document.createElement("head");
+    const body = document.createElement("body");
+    const div = document.createElement("div");
+    div.id = id;
+
+    html.appendChild(head);
+    body.appendChild(div);
+    html.appendChild(body);
+
+    this.shadowRoot.appendChild(html);
   }
   #readHTML(url) {
     const xmlhttp = new XMLHttpRequest();
@@ -45,47 +53,26 @@ class DOMContext {
 // - targetDOM:  shadowRoot
 // - css node in js go into  shadowRoot
 // - non css node in js go into iframe
-function reConect(triggerDOM, targetDOM) {
-  for (let a in document) {
-    // key in doucment not in shadowRoot
-    if (!targetDOM[a]) {
-      if (typeof document[a] === "function") {
-        // revrse the proxy
-        Object.defineProperty(targetDOM, a, {
-          get() {
-            return (...val) => {
-              console.log("0 proxing:", targetDOM, a, "-->", triggerDOM);
-              return triggerDOM[a].apply(triggerDOM,val);
-            };
-          },
-        });
-      } else {
-        Object.defineProperty(targetDOM, a, {
-          get() {
-            console.log("1 proxing:", targetDOM, a, "-->", triggerDOM);
-            return triggerDOM[a];
-          },
-        });
-      }
-      // key in doucment in shadowRoot, like append
+function reConnect(triggerDOM, targetDOM) {
+  for (let a in targetDOM) {
+    if (typeof targetDOM[a] === "function") {
+      Object.defineProperty(triggerDOM, a, {
+        get() {
+          return (...val) => {
+            console.log("2 proxing:", triggerDOM, a, val, "-->", targetDOM);
+            return targetDOM[a].apply(targetDOM, val);
+          };
+        },
+      });
     } else {
-      if (typeof document[a] === "function") {
-        Object.defineProperty(triggerDOM, a, {
-          get() {
-            return (...val) => {
-              console.log("2 proxing:", triggerDOM, a, "-->", targetDOM);
-              return targetDOM[a].apply(targetDOM,val);
-            };
-          },
-        });
-      } else {
-        Object.defineProperty(triggerDOM, a, {
-          get() {
-            console.log("3  proxing:", triggerDOM, a, "-->", targetDOM);
-            return targetDOM[a];
-          },
-        });
-      }
+      Object.defineProperty(triggerDOM, a, {
+        get() {
+          const ret = targetDOM[a];
+          console.log("3  proxing:", triggerDOM, a, ret, "-->", targetDOM);
+					// TODO: 
+          return ret;
+        },
+      });
     }
   }
 }
@@ -119,7 +106,8 @@ class AppComponent {
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
 
-    reConect(
+		// trigger frame document  -->  shadowRoot
+    reConnect(
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
