@@ -55,6 +55,8 @@ class DOMContext {
 // - css node in js go into  shadowRoot
 // - non css node in js go into iframe
 function reConnect(triggerDOM, targetDOM) {
+  const  iFrameHeadAppendChild=triggerDOM.head.appendChild.bind(triggerDOM.head)
+
   for (let a in triggerDOM) {
     if (typeof triggerDOM[a] === "function") {
       let oldf = triggerDOM[a];
@@ -95,6 +97,8 @@ function reConnect(triggerDOM, targetDOM) {
 								return (...val)=>{
 									if(val[0].nodeName === "SCRIPT"){
 										val[0].src= val[0].src.replace("5000", "7200")
+										//TODO: should append to shadow
+										return iFrameHeadAppendChild(val[0])
 									}
 									else
 									return oldAppend.apply(head,val)
