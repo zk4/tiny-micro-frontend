@@ -129,6 +129,9 @@ class AppComponent {
                       // TODO: refactor out
                       // handle img src rewriting
                       return (...val2) => {
+                        if(val2.length>2){
+                          debugger
+                        }
                         if (val2[0] === "src") {
                           val2[1] = that.url.href + val2[1]
                         }
@@ -164,6 +167,9 @@ class AppComponent {
                 configurable: true,
                 get() {
                   return (...val) => {
+                    if(val.length>1){
+                      debugger
+                    }
                     if (val[0].nodeName === "SCRIPT") {
                       val[0].src = val[0].src.replace(that.location.port, that.url.port);
                       return iFrameHeadAppendChild(val[0]);
@@ -201,4 +207,4 @@ class AppComponent {
     }
   }
 }
-new AppComponent("app", "http://localhost:7300/");
+new AppComponent("app", "http://localhost:7200/");
