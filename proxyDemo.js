@@ -2,7 +2,8 @@ let obj = {
   a: 333,
   c: () => {
     console.log("dfdf");
-  },
+	},
+	d:[1,2,3]
 };
 
 
@@ -13,5 +14,5 @@ let p =new Proxy(obj,{
 	}
 })
 
-console.log(p.c())
+console.log(p.d[1])
 

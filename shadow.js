@@ -12,8 +12,8 @@ class DOMContext {
     div.id = id;
 
     html.appendChild(head);
-    body.appendChild(div);
     html.appendChild(body);
+    body.appendChild(div);
 
     this.shadowRoot.appendChild(html);
   }
@@ -54,10 +54,15 @@ class DOMContext {
 // - css node in js go into  shadowRoot
 // - non css node in js go into iframe
 function reConnect(triggerDOM, targetDOM) {
-  for (let a in targetDOM) {
-    if (typeof targetDOM[a] === "function") {
+  for (let a in triggerDOM) {
+    if (typeof triggerDOM[a] === "function") {
+      let oldf = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
         get() {
+          if (!targetDOM[a]) {
+            console.log("NOT exit function in targetDOM", a);
+            return oldf;
+          }
           return (...val) => {
             console.log("2 proxing:", triggerDOM, a, val, "-->", targetDOM);
             return targetDOM[a].apply(targetDOM, val);
@@ -65,26 +70,52 @@ function reConnect(triggerDOM, targetDOM) {
         },
       });
     } else {
+      if (["location"].includes(a)) continue;
+      let old = triggerDOM[a];
       Object.defineProperty(triggerDOM, a, {
         get() {
+					if(a=="head"){
+						return targetDOM.firstChild.childNodes[0]
+					}
+					if(a=="body"){
+						return targetDOM.firstChild.childNodes[1]
+					}
           const ret = targetDOM[a];
-          console.log("3  proxing:", triggerDOM, a, ret, "-->", targetDOM);
-					// TODO: 
-          return ret;
+          if (!ret) {
+            console.log("NOT exit property in targetDOM", a);
+            return old;
+          }
+          console.log("3	proxing:", triggerDOM, a, ret, "-->", targetDOM);
+          // TODO: reConnect
+          const proxyRet = new Proxy(ret, {
+            get(target, p, receiver) {
+              console.log("....");
+              return Reflect.get(target, p);
+            },
+            defineProperty(target, property, attributes) {
+              console.log("....");
+              return Reflect.defineProperty(target, property, attributes);
+            },
+            apply(target, thisArg, argArray) {
+              console.log("....");
+              return Reflect.defineProperty(target, thisArg, argArray);
+            },
+            set(target, p, newValue, receiver) {
+              console.log("....");
+              Reflect.set(target, p, newValue);
+            },
+          });
+          return proxyRet;
         },
       });
     }
   }
 }
 class JSContext {
-  injectJsTag(src, isModule) {
+  injectJsTag(src) {
     const script = document.createElement("script");
     script.src = src;
-    if (isModule) {
-      script.type = "module";
-    } else {
-      script.type = "text/javascript";
-    }
+    script.type = "text/javascript";
     this.iframe.contentWindow.document.head.appendChild(script);
   }
 
@@ -95,8 +126,8 @@ class JSContext {
     this.ready = false;
     document.body.appendChild(this.iframe);
     this.iframe.onload = () => {
-      console.log("onload");
       this.ready = true;
+      console.log("iframe onload");
     };
   }
 }
@@ -106,17 +137,16 @@ class AppComponent {
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
 
-		// trigger frame document  -->  shadowRoot
+    let scs = this.domContext.getScripts();
+    for (let i = 0; i < scs.length; i++) {
+      this.jsContext.injectJsTag(scs[i]);
+    }
     reConnect(
       this.jsContext.iframe.contentWindow.document,
       this.domContext.shadowRoot
     );
 
-    let scs = this.domContext.getScripts();
-    console.log(scs);
 
-    this.jsContext.injectJsTag(scs[0], false);
-    this.jsContext.injectJsTag(scs[1], false);
   }
 }
 new AppComponent("app", "http://localhost:7200");
