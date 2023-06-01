@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -18,24 +17,7 @@
       <h2>Outer DOM</h2>
       <div id="shadow-container"></div>
     </div>
-    <script>
-      const shadowContainer = document.getElementById("shadow-container");
-      const shadowRoot = shadowContainer.attachShadow({ mode: "open" });
-      const shadowStyle = document.createElement("style");
-      shadowStyle.textContent = `
-        .container {
-          background-color: #fff;
-          padding: 10px;
-        }
-        .container h2 {
-          color: red;
-        }
-      `;
-      shadowRoot.appendChild(shadowStyle);
-      const shadowContent = document.createElement("div");
-      shadowContent.classList.add("container");
-      shadowContent.innerHTML = "<h2>Inner Shadow DOM</h2>";
-      shadowRoot.appendChild(shadowContent);
+    <script src="./shadow.js">
     </script>
   </body>
 </html>
