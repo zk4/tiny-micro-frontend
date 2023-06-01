@@ -120,7 +120,11 @@ class AppComponent {
               if (!targetDOM[a]) {
                 // create does not matter what parent is, it matters when parent add it
                 const ret = oldf.apply(triggerDOM, val);
-                console.log("NOT exit function in targetDOM", a, val, ret);
+
+                // there is no need to care about create function
+                if(!a.startsWith("create"))
+                  console.log("NOT exit function in targetDOM", a, val, ret);
+
                 if (ret.nodeName === "IMG") {
                   // console.log("NOT exit function in targetDOM", a, val, ret);
                   const oldSetAttribute = ret.setAttribute
