@@ -5,17 +5,16 @@ class DOMContext {
     this.location = window.location;
 
     this.HTMLDOM = this.readHTML(url);
-    this.mainUrl = window.location.origin;
     this.shadowRoot = this.createShadowRoot();
     const html = document.createElement("html");
 
     // prevent shadowRoot from calling getComputedStyle.
-    Object.defineProperty(html,'parentNode',{
-      get(){
+    Object.defineProperty(html, "parentNode", {
+      get() {
         // TODO: should I return iframe.contentWindow.document?
         return null;
-      }
-    })
+      },
+    });
     this.head = document.createElement("head");
     const body = document.createElement("body");
     const div = document.createElement("div");
@@ -27,18 +26,17 @@ class DOMContext {
 
     this.shadowRoot.appendChild(html);
   }
-  injectStyleText(text){
+  injectStyleText(text) {
     const script = document.createElement("style");
     script.innerText = text;
     this.head.appendChild(script);
   }
-  injectStyleTag(href){
-    debugger
+  injectStyleTag(href) {
+    debugger;
     const script = document.createElement("style");
     script.href = href;
     // script.type = "text/javascript";
     this.head.appendChild(script);
-
   }
   readHTML(url) {
     const xmlhttp = new XMLHttpRequest();
@@ -56,17 +54,18 @@ class DOMContext {
   getStyles() {
     let styles = [];
     const ss = this.HTMLDOM.getElementsByTagName("style");
-    for (let a of ss) styles.push({
-      href: a.href,
-      innerText: a.innerText
-    });
+    for (let a of ss)
+      styles.push({
+        href: a.href,
+        innerText: a.innerText,
+      });
     return styles;
   }
 
   createShadowRoot() {
     const shadowContainer = document.createElement("div");
     document.body.append(shadowContainer);
-    return shadowContainer.attachShadow({mode: "open"});
+    return shadowContainer.attachShadow({ mode: "open" });
   }
   getShadowRoot() {
     return this.shadowRoot;
@@ -77,8 +76,10 @@ class JSContext {
   injectJsTag(src) {
     const script = document.createElement("script");
     script.src = src;
-    script.type = "text/javascript";
+    // script.type = "text/javascript";
+    script.type = "module";
     this.iframe.contentWindow.document.head.appendChild(script);
+    window.iframe = this.iframe;
   }
 
   constructor() {
@@ -89,11 +90,78 @@ class JSContext {
     document.body.appendChild(this.iframe);
     this.iframe.onload = () => {
       this.ready = true;
-      // console.log("iframe onload");
+      console.log("iframe onload");
+    };
+    this.patchIframeHistory(this.iframe.contentWindow);
+    // this.stopIframeLoading(this.iframe.contentWindow)
+
+    const that = this;
+    console.log("called ..................");
+    setInterval(() => {
+      console.log("location", that.iframe.contentWindow.location);
+      console.log("history", that.iframe.contentWindow.history.state);
+      console.log("document", that.iframe.contentWindow.document);
+      console.log("window", that.iframe.contentWindow.__ZK);
+      console.log("-------------------------------------------");
+    }, 5000);
+
+    this.iframe.beforeunload = () => {
+      debugger;
+      console.log(window.location.href); // capture the url
+      event.preventDefault(); // just to pause and see the condole
     };
   }
   getIdocument() {
     return this.iframe.contentWindow.document;
+  }
+  stopIframeLoading(iframeWindow, url) {
+    new Promise((resolve) => {
+      function loop() {
+        setTimeout(() => {
+          // location ready
+          if (iframeWindow.location.href === "about:blank") {
+            loop();
+          } else {
+            iframeWindow.stop();
+            // initIframeDom(iframeWindow);
+            /**
+             * 如果有同步优先同步，非同步从url读取
+             */
+            iframeWindow.history.replaceState(null, "", undefined);
+            resolve();
+          }
+        }, 0);
+      }
+      loop();
+    });
+  }
+
+  patchIframeHistory(iframeWindow, appHostPath, mainHostPath) {
+    const history = iframeWindow.history;
+    const rawHistoryPushState = history.pushState;
+    const rawHistoryReplaceState = history.replaceState;
+    history.pushState = function (data, title, url) {
+      // const baseUrl =
+      //   mainHostPath + iframeWindow.location.pathname + iframeWindow.location.search + iframeWindow.location.hash;
+      // const mainUrl = new URL(url?.replace(appHostPath, ""), baseUrl).href;
+      // const ignoreFlag = url === undefined;
+
+      rawHistoryPushState.call(history, data, title, undefined);
+      // if (ignoreFlag) return;
+      // updateBase(iframeWindow, appHostPath, mainHostPath);
+      // syncUrlToWindow(iframeWindow);
+    };
+    history.replaceState = function (data, title, url) {
+      // const baseUrl =
+      //   mainHostPath + iframeWindow.location.pathname + iframeWindow.location.search + iframeWindow.location.hash;
+      // const mainUrl = new URL(url?.replace(appHostPath, ""), baseUrl).href;
+      // const ignoreFlag = url === undefined;
+
+      rawHistoryReplaceState.call(history, data, title, undefined);
+      // if (ignoreFlag) return;
+      // updateBase(iframeWindow, appHostPath, mainHostPath);
+      // syncUrlToWindow(iframeWindow);
+    };
   }
 }
 
@@ -101,7 +169,7 @@ class AppComponent {
   constructor(id, url) {
     this.id = id;
     this.url = new URL(url);
-    this.location = window.location
+    this.location = window.location;
     this.domContext = new DOMContext(id, url);
     this.jsContext = new JSContext();
     this.iframeDocument = this.jsContext.getIdocument();
@@ -113,10 +181,9 @@ class AppComponent {
 
     let sts = this.domContext.getStyles();
     for (let i = 0; i < sts.length; i++) {
-      if(sts[i].href)
+      if (sts[i].href)
         this.domContext.injectStyleTag(this.correctUrl(sts[i].href));
-      if(sts[i].innerText)
-        this.domContext.injectStyleText(sts[i].innerText);
+      if (sts[i].innerText) this.domContext.injectStyleText(sts[i].innerText);
     }
     this.reWired(
       this.jsContext.iframe.contentWindow.document,
@@ -124,20 +191,19 @@ class AppComponent {
     );
   }
 
-  correctUrl(src){
-    if(src){
-      if(src.startsWith("http"))
+  correctUrl(src) {
+    if (src) {
+      if (src.startsWith("http"))
         src = src.replace(this.location.origin, this.url.origin);
-      else
-      src = this.url.origin+"/"+src;
+      else src = this.url.origin + "/" + src;
     }
-    return src
+    return src;
   }
 
   // document api work on triggerDOM will take effect on targetDOM
   // for instance:
   reWired(triggerDOM, targetDOM) {
-    let that = this
+    let that = this;
     // TODO: refactor this out, so ugly
     const iFrameHeadAppendChild = triggerDOM.head.appendChild.bind(
       triggerDOM.head
@@ -156,24 +222,24 @@ class AppComponent {
                 const ret = oldf.apply(triggerDOM, val);
 
                 // there is no need to care about create function
-                if(!a.startsWith("create"))
+                if (!a.startsWith("create"))
                   console.log("NOT exit function in targetDOM", a, val, ret);
 
                 if (ret.nodeName === "IMG") {
                   // console.log("NOT exit function in targetDOM", a, val, ret);
-                  const oldSetAttribute = ret.setAttribute
+                  const oldSetAttribute = ret.setAttribute;
                   Object.defineProperty(ret, "setAttribute", {
                     get() {
                       // TODO: refactor out
                       // handle img src rewriting
                       return (...val2) => {
-                        if(val2.length>2){
-                          debugger
+                        if (val2.length > 2) {
+                          debugger;
                         }
                         if (val2[0] === "src") {
-                          val2[1] = that.correctUrl(val2[1])
+                          val2[1] = that.correctUrl(val2[1]);
                         }
-                        return oldSetAttribute.apply(ret, val2)
+                        return oldSetAttribute.apply(ret, val2);
                       };
                     },
                   });
@@ -205,12 +271,12 @@ class AppComponent {
                 configurable: true,
                 get() {
                   return (...val) => {
-                    if(val.length>1){
-                      debugger
+                    if (val.length > 1) {
+                      debugger;
                     }
                     if (val[0].nodeName === "SCRIPT") {
-                      val[0].src = that.correctUrl(val[0].src)
-                      console.log("url:",val[0].src)
+                      val[0].src = that.correctUrl(val[0].src);
+                      console.log("url:", val[0].src);
                       return iFrameHeadAppendChild(val[0]);
                     } else return oldAppend.apply(head, val);
                   };
@@ -246,4 +312,23 @@ class AppComponent {
     }
   }
 }
+function debugAnything(obj, key) {
+  Object.defineProperty(obj, key, {
+    get() {
+      let old = obj[key];
+      if (typeof obj[key] === "function") {
+        return (...vals) => {
+          return old.apply();
+        };
+      } else {
+        return (...vals) => {
+          debugger;
+          return obj[key];
+        };
+      }
+    },
+  });
+}
+// debugAnything(window.document, "createElement");
+window.__ZK = "ZK";
 new AppComponent("app", "http://localhost:7300/");
