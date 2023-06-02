@@ -9,7 +9,7 @@ class DOMContext {
     this.shadowRoot = this.createShadowRoot();
     const html = document.createElement("html");
 
-    // prevent the shadowRoot from getComputedStyle
+    // prevent shadowRoot from calling getComputedStyle.
     Object.defineProperty(html,'parentNode',{
       get(){
         // TODO: should I return iframe.contentWindow.document?
