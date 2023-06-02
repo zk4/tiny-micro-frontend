@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+	<script>
+		// <base href="http://www.baidu.com">
+		let b = document.createElement('base')
+		b.href = "http://www.baidu.com"
+		document.head.appendChild(b)
+
+		let a = document.querySelector("base");
+		console.log(a.href)
+	</script>
+
+
+	this is relative path for image.
+	load it in file:// or local.  you would see baidu picture.
+	<img src="/img/PCtm_d9c8750bed0b3c7d089fa7d55720d6cf.png">
+</body>
+</html>
