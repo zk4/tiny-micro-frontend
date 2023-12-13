@@ -1,3 +1,5 @@
+Pretty much the same ideas as wujie. Just for the learning fun. The code is simple enough to understand. 
+
 # tiny micro-frontend framework idea validation
 
 1. using shadow dom to isolate css
